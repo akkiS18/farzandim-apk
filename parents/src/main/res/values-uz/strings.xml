@@ -1,0 +1,139 @@
+<resources>
+    <string name="app_name">Farzandim</string>
+    <string name="app_subtitle">Ota-onalar portali</string>
+
+    <!-- Auth / Login -->
+    <string name="login_title">Xush kelibsiz!</string>
+    <string name="login_desc">Farzandingiz ta\'limini birgalikda kuzatamiz</string>
+    <string name="passport_label">Pasport seriyasi / Hujjat</string>
+    <string name="passport_hint">AA 1234567</string>
+    <string name="password_label">Parol</string>
+    <string name="password_hint">Parolingizni kiriting</string>
+    <string name="login_btn">Tizimga kirish</string>
+    <string name="login_loading">Tekshirilmoqda...</string>
+    <string name="school_settings">Maktab sozlamalari</string>
+    <string name="school_subdomain">Maktab subdomeni</string>
+    <string name="school_subdomain_hint">masalan: 21_maktab</string>
+    <string name="save_btn">Saqlash</string>
+    <string name="cancel_btn">Bekor qilish</string>
+
+    <!-- PIN & Biometrics -->
+    <string name="pin_create_title">Tezkor PIN-kod o\'rnating</string>
+    <string name="pin_create_desc">Ilovaga oson va xavfsiz kirish uchun 4 xonali PIN tanlang</string>
+    <string name="pin_confirm_title">PIN-kodni tasdiqlang</string>
+    <string name="pin_enter_title">PIN-kodni kiriting</string>
+    <string name="pin_mismatch">PIN-kodlar mos kelmadi, qaytadan urinib ko\'ring</string>
+    <string name="pin_wrong">PIN-kod noto\'g\'ri</string>
+    <string name="biometric_prompt_title">Biometrik kirish</string>
+    <string name="biometric_prompt_desc">Barmoq izi yoki yuzni aniqlash orqali kiring</string>
+    <string name="skip_btn">Keyinroq</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Asosiy</string>
+    <string name="nav_diary">Kundalik</string>
+    <string name="nav_comments">Izohlar</string>
+    <string name="nav_settings">Sozlamalar</string>
+
+    <!-- Dashboard / Home -->
+    <string name="dashboard_title">Bosh sahifa</string>
+    <string name="child_today_summary">Bugungi xulosa</string>
+    <string name="child_balance_label">Balans</string>
+    <string name="child_class_label">Sinf</string>
+    <string name="unapproved_grades_alert">%1$d ta yangi baho tasdiqlashni kutmoqda</string>
+    <string name="view_all">Barchasini ko\'rish</string>
+    <string name="quick_actions">Tezkor xizmatlar</string>
+    <string name="feed_title">Yangiliklar va Signallar</string>
+    <string name="no_feed_items">Hozircha yangiliklar yo\'q</string>
+
+    <!-- Quick Action Services -->
+    <string name="service_dynamics">Dinamika</string>
+    <string name="service_balance">Balans</string>
+    <string name="service_menu">Oshxona</string>
+    <string name="service_announcements">E\'lonlar</string>
+    <string name="service_clubs">To\'garaklar</string>
+    <string name="service_books">Kutubxona</string>
+    <string name="service_ai_report">AI Hisobot</string>
+
+    <!-- Diary / Kundalik -->
+    <string name="diary_title">Kundalik</string>
+    <string name="approve_grade_btn">Ko\'rdim ✓</string>
+    <string name="approved_badge">Ko\'rildi ✓</string>
+    <string name="approve_all_week">Haftani tasdiqlash</string>
+    <string name="holiday_banner">Bugun maktabda dam olish kuni</string>
+    <string name="no_lessons">Bu kunda darslar belgilanmagan</string>
+    <string name="lessons_count">%1$d ta dars</string>
+    <string name="grade_mastery">O\'zlashtirish</string>
+    <string name="grade_behavior">Xulq</string>
+    <string name="grade_attendance">Davomat</string>
+    <string name="att_present">Bor (+)</string>
+    <string name="att_late">Kechikdi (k)</string>
+    <string name="att_absent">Kelmadi (-)</string>
+
+    <!-- Comments & Chat -->
+    <string name="comments_title">Muloqot va Izohlar</string>
+    <string name="chat_input_hint">O\'qituvchiga xabar yozing...</string>
+    <string name="send_btn">Yuborish</string>
+    <string name="no_messages">Hozircha xabarlar yo\'q</string>
+    <string name="teacher_label">O\'qituvchi</string>
+
+    <!-- Dynamics / Analytics -->
+    <string name="dynamics_title">O\'zlashtirish Dinamikasi</string>
+    <string name="average_score">O\'rtacha ball</string>
+    <string name="quarter_1">1-chorak</string>
+    <string name="quarter_2">2-chorak</string>
+    <string name="quarter_3">3-chorak</string>
+    <string name="quarter_4">4-chorak</string>
+    <string name="trend_up">O\'sish tendentsiyasi</string>
+    <string name="trend_down">Pasayish tendentsiyasi</string>
+
+    <!-- Balance -->
+    <string name="balance_title">Balans va To\'lovlar</string>
+    <string name="current_balance">Joriy balans</string>
+    <string name="next_charge_label">Navbatdagi to\'lov</string>
+    <string name="payment_history">To\'lovlar tarixi</string>
+
+    <!-- Menu -->
+    <string name="menu_title">Oshxona Taomnomasi</string>
+    <string name="breakfast">Nonushta</string>
+    <string name="lunch">Tushlik</string>
+    <string name="afternoon_snack">Ikkinchi tushlik</string>
+    <string name="dinner">Kechki ovqat</string>
+    <string name="leave_menu_comment">Taom sifatiga fikr bildirish</string>
+
+    <!-- Announcements -->
+    <string name="announcements_title">E\'lonlar va So\'rovnomalar</string>
+    <string name="vote_btn">Ovoz berish</string>
+    <string name="voted_badge">Ovoz berildi ✓</string>
+
+    <!-- Clubs & Books -->
+    <string name="clubs_title">To\'garaklar</string>
+    <string name="club_join_req">Ariza berish</string>
+    <string name="club_cancel_req">Arizani bekor qilish</string>
+    <string name="club_status_approved">A\'zo bo\'lingan</string>
+    <string name="club_status_pending">Ko\'rib chiqilmoqda</string>
+    <string name="books_title">Kutubxona Kitoblari</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Sozlamalar</string>
+    <string name="profile_section">Profil ma\'lumotlari</string>
+    <string name="children_section">Farzandlar</string>
+    <string name="language_section">Ilova tili</string>
+    <string name="security_section">Xavfsizlik</string>
+    <string name="lang_uz">O\'zbekcha</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_en">English</string>
+    <string name="change_pin">PIN-kodni o\'zgartirish</string>
+    <string name="biometric_auth">Barmoq izi / FaceID</string>
+    <string name="logout_btn">Tizimdan chiqish</string>
+    <string name="logout_confirm_title">Chiqishni tasdiqlaysizmi?</string>
+    <string name="logout_confirm_msg">Hisobingizdan chiqmoqchimisiz?</string>
+
+    <!-- Error & Common -->
+    <string name="error_generic">Xatolik yuz berdi</string>
+    <string name="error_network">Server bilan bog\'lanishda xatolik</string>
+    <string name="retry_btn">Qayta urinish</string>
+    <string name="child_not_found">Farzand ma\'lumotlari topilmadi</string>
+    <string name="child_loading">Farzand ma\'lumotlari yuklanmoqda...</string>
+    <string name="child_contact_school">Maktab ma\'muriyati bilan bog\'laning yoki qayta yangilang</string>
+    <string name="please_wait">Iltimos kuting...</string>
+</resources>

@@ -1,0 +1,139 @@
+<resources>
+    <string name="app_name">Farzandim</string>
+    <string name="app_subtitle">Родительский портал</string>
+
+    <!-- Auth / Login -->
+    <string name="login_title">Добро пожаловать!</string>
+    <string name="login_desc">Следим за успехами ребенка вместе</string>
+    <string name="passport_label">Серия паспорта / Документ</string>
+    <string name="passport_hint">AA 1234567</string>
+    <string name="password_label">Пароль</string>
+    <string name="password_hint">Введите пароль</string>
+    <string name="login_btn">Войти в систему</string>
+    <string name="login_loading">Проверка данных...</string>
+    <string name="school_settings">Настройки школы</string>
+    <string name="school_subdomain">Субдомен школы</string>
+    <string name="school_subdomain_hint">например: 21_maktab</string>
+    <string name="save_btn">Сохранить</string>
+    <string name="cancel_btn">Отмена</string>
+
+    <!-- PIN & Biometrics -->
+    <string name="pin_create_title">Установите быстрый PIN-код</string>
+    <string name="pin_create_desc">Выберите 4-значный PIN для быстрого и безопасного входа</string>
+    <string name="pin_confirm_title">Подтвердите PIN-код</string>
+    <string name="pin_enter_title">Введите PIN-код</string>
+    <string name="pin_mismatch">PIN-коды не совпадают, попробуйте снова</string>
+    <string name="pin_wrong">Неверный PIN-код</string>
+    <string name="biometric_prompt_title">Биометрический вход</string>
+    <string name="biometric_prompt_desc">Войдите по отпечатку пальца или FaceID</string>
+    <string name="skip_btn">Позже</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_diary">Дневник</string>
+    <string name="nav_comments">Чат</string>
+    <string name="nav_settings">Настройки</string>
+
+    <!-- Dashboard / Home -->
+    <string name="dashboard_title">Главная</string>
+    <string name="child_today_summary">Итоги сегодня</string>
+    <string name="child_balance_label">Баланс</string>
+    <string name="child_class_label">Класс</string>
+    <string name="unapproved_grades_alert">%1$d новых оценок ожидают подтверждения</string>
+    <string name="view_all">Смотреть все</string>
+    <string name="quick_actions">Быстрые сервисы</string>
+    <string name="feed_title">Новости и События</string>
+    <string name="no_feed_items">Новостей пока нет</string>
+
+    <!-- Quick Action Services -->
+    <string name="service_dynamics">Динамика</string>
+    <string name="service_balance">Баланс</string>
+    <string name="service_menu">Столовая</string>
+    <string name="service_announcements">Объявления</string>
+    <string name="service_clubs">Кружки</string>
+    <string name="service_books">Библиотека</string>
+    <string name="service_ai_report">AI Отчет</string>
+
+    <!-- Diary / Kundalik -->
+    <string name="diary_title">Дневник</string>
+    <string name="approve_grade_btn">Ознакомлен ✓</string>
+    <string name="approved_badge">Проверено ✓</string>
+    <string name="approve_all_week">Подтвердить неделю</string>
+    <string name="holiday_banner">Сегодня в школе выходной день</string>
+    <string name="no_lessons">На этот день уроков нет</string>
+    <string name="lessons_count">%1$d уроков</string>
+    <string name="grade_mastery">Успеваемость</string>
+    <string name="grade_behavior">Поведение</string>
+    <string name="grade_attendance">Посещаемость</string>
+    <string name="att_present">Присутствовал (+)</string>
+    <string name="att_late">Опоздал (k)</string>
+    <string name="att_absent">Отсутствовал (-)</string>
+
+    <!-- Comments & Chat -->
+    <string name="comments_title">Чат и Отзывы</string>
+    <string name="chat_input_hint">Напишите сообщение учителю...</string>
+    <string name="send_btn">Отправить</string>
+    <string name="no_messages">Сообщений пока нет</string>
+    <string name="teacher_label">Учитель</string>
+
+    <!-- Dynamics / Analytics -->
+    <string name="dynamics_title">Динамика успеваемости</string>
+    <string name="average_score">Средний балл</string>
+    <string name="quarter_1">1-я четверть</string>
+    <string name="quarter_2">2-я четверть</string>
+    <string name="quarter_3">3-я четверть</string>
+    <string name="quarter_4">4-я четверть</string>
+    <string name="trend_up">Тренд к росту</string>
+    <string name="trend_down">Тренд к снижению</string>
+
+    <!-- Balance -->
+    <string name="balance_title">Баланс и Оплата</string>
+    <string name="current_balance">Текущий баланс</string>
+    <string name="next_charge_label">Следующий платеж</string>
+    <string name="payment_history">История платежей</string>
+
+    <!-- Menu -->
+    <string name="menu_title">Меню столовой</string>
+    <string name="breakfast">Завтрак</string>
+    <string name="lunch">Обед</string>
+    <string name="afternoon_snack">Полдник</string>
+    <string name="dinner">Ужин</string>
+    <string name="leave_menu_comment">Оставить отзыв о блюдах</string>
+
+    <!-- Announcements -->
+    <string name="announcements_title">Объявления и Опросы</string>
+    <string name="vote_btn">Голосовать</string>
+    <string name="voted_badge">Голос принят ✓</string>
+
+    <!-- Clubs & Books -->
+    <string name="clubs_title">Кружки</string>
+    <string name="club_join_req">Подать заявку</string>
+    <string name="club_cancel_req">Отозвать заявку</string>
+    <string name="club_status_approved">Участник</string>
+    <string name="club_status_pending">На рассмотрении</string>
+    <string name="books_title">Книги библиотеки</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="profile_section">Данные профиля</string>
+    <string name="children_section">Дети</string>
+    <string name="language_section">Язык приложения</string>
+    <string name="security_section">Безопасность</string>
+    <string name="lang_uz">O\'zbekcha</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_en">English</string>
+    <string name="change_pin">Изменить PIN-код</string>
+    <string name="biometric_auth">Вход по биометрии</string>
+    <string name="logout_btn">Выйти из аккаунта</string>
+    <string name="logout_confirm_title">Вы уверены?</string>
+    <string name="logout_confirm_msg">Вы действительно хотите выйти?</string>
+
+    <!-- Error & Common -->
+    <string name="error_generic">Произошла ошибка</string>
+    <string name="error_network">Ошибка подключения к серверу</string>
+    <string name="retry_btn">Повторить попытку</string>
+    <string name="child_not_found">Данные ребенка не найдены</string>
+    <string name="child_loading">Загрузка данных ребенка...</string>
+    <string name="child_contact_school">Обратитесь к администрации школы или обновите</string>
+    <string name="please_wait">Пожалуйста, подождите...</string>
+</resources>

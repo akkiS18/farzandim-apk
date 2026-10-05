@@ -1,0 +1,139 @@
+<resources>
+    <string name="app_name">Farzandim</string>
+    <string name="app_subtitle">Parent Portal</string>
+
+    <!-- Auth / Login -->
+    <string name="login_title">Welcome!</string>
+    <string name="login_desc">Tracking your child\'s learning journey together</string>
+    <string name="passport_label">Passport Series / Document</string>
+    <string name="passport_hint">AA 1234567</string>
+    <string name="password_label">Password</string>
+    <string name="password_hint">Enter your password</string>
+    <string name="login_btn">Log In</string>
+    <string name="login_loading">Verifying credentials...</string>
+    <string name="school_settings">School Settings</string>
+    <string name="school_subdomain">School Subdomain</string>
+    <string name="school_subdomain_hint">e.g. 21_maktab</string>
+    <string name="save_btn">Save</string>
+    <string name="cancel_btn">Cancel</string>
+
+    <!-- PIN & Biometrics -->
+    <string name="pin_create_title">Set Quick PIN Code</string>
+    <string name="pin_create_desc">Choose a 4-digit PIN for quick and secure access</string>
+    <string name="pin_confirm_title">Confirm PIN Code</string>
+    <string name="pin_enter_title">Enter PIN Code</string>
+    <string name="pin_mismatch">PINs do not match, please try again</string>
+    <string name="pin_wrong">Incorrect PIN Code</string>
+    <string name="biometric_prompt_title">Biometric Login</string>
+    <string name="biometric_prompt_desc">Log in with your fingerprint or FaceID</string>
+    <string name="skip_btn">Later</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_diary">Diary</string>
+    <string name="nav_comments">Chat</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Dashboard / Home -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="child_today_summary">Today\'s Highlights</string>
+    <string name="child_balance_label">Balance</string>
+    <string name="child_class_label">Class</string>
+    <string name="unapproved_grades_alert">%1$d new grades waiting for your review</string>
+    <string name="view_all">View All</string>
+    <string name="quick_actions">Quick Services</string>
+    <string name="feed_title">News and Signals</string>
+    <string name="no_feed_items">No recent news yet</string>
+
+    <!-- Quick Action Services -->
+    <string name="service_dynamics">Dynamics</string>
+    <string name="service_balance">Balance</string>
+    <string name="service_menu">Dining</string>
+    <string name="service_announcements">Notices</string>
+    <string name="service_clubs">Clubs</string>
+    <string name="service_books">Library</string>
+    <string name="service_ai_report">AI Report</string>
+
+    <!-- Diary / Kundalik -->
+    <string name="diary_title">Diary</string>
+    <string name="approve_grade_btn">Seen ✓</string>
+    <string name="approved_badge">Reviewed ✓</string>
+    <string name="approve_all_week">Confirm Week</string>
+    <string name="holiday_banner">Today is a school holiday</string>
+    <string name="no_lessons">No lessons scheduled for this day</string>
+    <string name="lessons_count">%1$d lessons</string>
+    <string name="grade_mastery">Academic</string>
+    <string name="grade_behavior">Behavior</string>
+    <string name="grade_attendance">Attendance</string>
+    <string name="att_present">Present (+)</string>
+    <string name="att_late">Late (k)</string>
+    <string name="att_absent">Absent (-)</string>
+
+    <!-- Comments & Chat -->
+    <string name="comments_title">Chat &amp; Comments</string>
+    <string name="chat_input_hint">Message teacher...</string>
+    <string name="send_btn">Send</string>
+    <string name="no_messages">No messages yet</string>
+    <string name="teacher_label">Teacher</string>
+
+    <!-- Dynamics / Analytics -->
+    <string name="dynamics_title">Performance Dynamics</string>
+    <string name="average_score">Average Score</string>
+    <string name="quarter_1">Quarter 1</string>
+    <string name="quarter_2">Quarter 2</string>
+    <string name="quarter_3">Quarter 3</string>
+    <string name="quarter_4">Quarter 4</string>
+    <string name="trend_up">Improving Trend</string>
+    <string name="trend_down">Declining Trend</string>
+
+    <!-- Balance -->
+    <string name="balance_title">Balance &amp; Payments</string>
+    <string name="current_balance">Current Balance</string>
+    <string name="next_charge_label">Next Charge</string>
+    <string name="payment_history">Payment History</string>
+
+    <!-- Menu -->
+    <string name="menu_title">Dining Menu</string>
+    <string name="breakfast">Breakfast</string>
+    <string name="lunch">Lunch</string>
+    <string name="afternoon_snack">Snack</string>
+    <string name="dinner">Dinner</string>
+    <string name="leave_menu_comment">Leave meal feedback</string>
+
+    <!-- Announcements -->
+    <string name="announcements_title">Notices &amp; Polls</string>
+    <string name="vote_btn">Vote</string>
+    <string name="voted_badge">Voted ✓</string>
+
+    <!-- Clubs & Books -->
+    <string name="clubs_title">Clubs</string>
+    <string name="club_join_req">Apply</string>
+    <string name="club_cancel_req">Withdraw</string>
+    <string name="club_status_approved">Enrolled</string>
+    <string name="club_status_pending">Pending</string>
+    <string name="books_title">Library Books</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="profile_section">Profile Information</string>
+    <string name="children_section">Children</string>
+    <string name="language_section">App Language</string>
+    <string name="security_section">Security</string>
+    <string name="lang_uz">O\'zbekcha</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_en">English</string>
+    <string name="change_pin">Change PIN Code</string>
+    <string name="biometric_auth">Biometric Login</string>
+    <string name="logout_btn">Log Out</string>
+    <string name="logout_confirm_title">Confirm Logout</string>
+    <string name="logout_confirm_msg">Are you sure you want to log out?</string>
+
+    <!-- Error & Common -->
+    <string name="error_generic">Something went wrong</string>
+    <string name="error_network">Server connection error</string>
+    <string name="retry_btn">Retry</string>
+    <string name="child_not_found">Child information not found</string>
+    <string name="child_loading">Loading child details...</string>
+    <string name="child_contact_school">Contact school administration or tap to refresh</string>
+    <string name="please_wait">Please wait...</string>
+</resources>
