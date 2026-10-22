@@ -302,7 +302,7 @@ class JournalRepository(
                     AppLogger.i("JournalRepo", "Purged ${staleLocalIds.size} server-deleted grades from local Room DB")
                 }
 
-                // 2. Map and Upsert active server grades, reusing existing localId if already present locally
+                // 2. Map and Upsert active server grades, checking for conflicts with pending local drafts
                 val entities = remoteGrades.map { g ->
                     val cleanDate = if (g.gradeDate.contains('T')) {
                         g.gradeDate.substringBefore('T').take(10)
@@ -318,23 +318,47 @@ class JournalRepository(
                     val key = "${g.studentId}_${lessonNum}_${cleanDate}_${resolvedGradeType}"
                     val existing = existingMap[key]
 
-                    GradeEntity(
-                        localId = existing?.localId ?: "srv_${g.id}",
-                        serverId = g.id,
-                        studentId = g.studentId,
-                        subjectId = g.subjectId,
-                        lessonNumber = lessonNum,
-                        gradeDate = cleanDate,
-                        gradeType = resolvedGradeType,
-                        gradeCategory = g.gradeCategory ?: "DAILY",
-                        value = g.value,
-                        numericValue = g.numericValue,
-                        status = g.status ?: "marked",
-                        approvedByParent = g.approvedByParent,
-                        gradingSystemId = g.gradingSystemId,
-                        syncStatus = "SYNCED",
-                        updatedAt = System.currentTimeMillis()
-                    )
+                    if (existing != null && (existing.syncStatus == "PENDING_UPSERT" || existing.syncStatus == "CONFLICT")) {
+                        if (existing.value != g.value) {
+                            // CONFLICT: Teacher set a grade offline, but server (class leader) set a different grade!
+                            AppLogger.w("JournalRepo", "Conflict detected for student ${g.studentId}: local='${existing.value}' vs server='${g.value}'")
+                            existing.copy(
+                                syncStatus = "CONFLICT",
+                                conflictRemoteValue = g.value,
+                                conflictRemoteId = g.id,
+                                updatedAt = System.currentTimeMillis()
+                            )
+                        } else {
+                            // Both have the same value -> safely mark synced
+                            existing.copy(
+                                serverId = g.id,
+                                syncStatus = "SYNCED",
+                                conflictRemoteValue = null,
+                                conflictRemoteId = null,
+                                updatedAt = System.currentTimeMillis()
+                            )
+                        }
+                    } else {
+                        GradeEntity(
+                            localId = existing?.localId ?: "srv_${g.id}",
+                            serverId = g.id,
+                            studentId = g.studentId,
+                            subjectId = g.subjectId,
+                            lessonNumber = lessonNum,
+                            gradeDate = cleanDate,
+                            gradeType = resolvedGradeType,
+                            gradeCategory = g.gradeCategory ?: "DAILY",
+                            value = g.value,
+                            numericValue = g.numericValue,
+                            status = g.status ?: "marked",
+                            approvedByParent = g.approvedByParent,
+                            gradingSystemId = g.gradingSystemId,
+                            syncStatus = "SYNCED",
+                            conflictRemoteValue = null,
+                            conflictRemoteId = null,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                    }
                 }
 
                 if (entities.isNotEmpty()) {
@@ -625,6 +649,79 @@ class JournalRepository(
                     }
                 } catch (_: Exception) {}
             }
+        }
+    }
+
+    fun getConflictGradesFlow(): Flow<List<GradeEntity>> = gradeDao.getConflictGradesFlow()
+
+    fun getConflictGradesForLessonFlow(subjectId: Int, lessonNumber: Int, gradeDate: String): Flow<List<GradeEntity>> =
+        gradeDao.getConflictGradesForLessonFlow(subjectId, lessonNumber, gradeDate)
+
+    suspend fun resolveConflictKeepLocal(localId: String): Result<Unit> {
+        return try {
+            val grade = gradeDao.getGradesByLocalIds(listOf(localId)).firstOrNull()
+                ?: return Result.failure(Exception("Baho topilmadi"))
+
+            val req = CreateGradeRequest(
+                studentId = grade.studentId,
+                subjectId = grade.subjectId,
+                value = grade.value,
+                gradeDate = grade.gradeDate,
+                gradingSystemId = grade.gradingSystemId,
+                gradeType = grade.gradeType,
+                gradeCategory = grade.gradeCategory,
+                lessonNumber = grade.lessonNumber
+            )
+
+            val targetServerId = grade.conflictRemoteId ?: grade.serverId
+            val res = if (targetServerId != null) {
+                apiService.updateGrade(targetServerId, req)
+            } else {
+                apiService.createGrade(req)
+            }
+
+            if (res.isSuccessful && res.body() != null) {
+                val finalServerId = res.body()!!.id
+                gradeDao.upsertGrade(
+                    grade.copy(
+                        serverId = finalServerId,
+                        syncStatus = "SYNCED",
+                        conflictRemoteValue = null,
+                        conflictRemoteId = null,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Serverga saqlashda xatolik: HTTP ${res.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun resolveConflictAcceptRemote(localId: String): Result<Unit> {
+        return try {
+            val grade = gradeDao.getGradesByLocalIds(listOf(localId)).firstOrNull()
+                ?: return Result.failure(Exception("Baho topilmadi"))
+
+            val remoteValue = grade.conflictRemoteValue ?: grade.value
+            val remoteId = grade.conflictRemoteId ?: grade.serverId
+
+            gradeDao.upsertGrade(
+                grade.copy(
+                    value = remoteValue,
+                    numericValue = remoteValue.toDoubleOrNull(),
+                    serverId = remoteId,
+                    syncStatus = "SYNCED",
+                    conflictRemoteValue = null,
+                    conflictRemoteId = null,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

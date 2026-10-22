@@ -84,7 +84,9 @@ data class GradeEntity(
     val status: String = "draft", // "draft" (tahrirlanadigan) or "approved" (tasdiqlangan)
     val approvedByParent: Boolean = false,
     val gradingSystemId: Int? = null,
-    val syncStatus: String = "SYNCED", // "SYNCED", "PENDING_UPSERT", "PENDING_DELETE"
+    val syncStatus: String = "SYNCED", // "SYNCED", "PENDING_UPSERT", "PENDING_DELETE", "CONFLICT"
+    val conflictRemoteValue: String? = null,
+    val conflictRemoteId: Int? = null,
     val updatedAt: Long = System.currentTimeMillis()
 )
 

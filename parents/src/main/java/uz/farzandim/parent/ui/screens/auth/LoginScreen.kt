@@ -1,5 +1,6 @@
 package uz.farzandim.parent.ui.screens.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -122,29 +124,28 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Brand Logo with Warm Gradient
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(SkyBluePrimary, SunsetOrangeAccent)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+            // Brand Logo with Parents App Icon
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Color.White,
+                modifier = Modifier.size(72.dp),
+                shadowElevation = 4.dp
             ) {
-                Text(
-                    text = "F",
-                    color = Color.White,
-                    fontSize = 38.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.padding(6.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_logo),
+                        contentDescription = "Farzandim Logo",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
 
             // Title & Description
             Text(
-                text = stringResource(id = R.string.login_title),
+                text = "Farzandim-edu",
                 style = Typography.headlineMedium,
                 color = TextPrimary
             )

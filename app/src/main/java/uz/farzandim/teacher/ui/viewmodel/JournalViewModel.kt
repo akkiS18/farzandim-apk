@@ -105,6 +105,38 @@ class JournalViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _isResolvingConflict = MutableStateFlow(false)
+    val isResolvingConflict: StateFlow<Boolean> = _isResolvingConflict.asStateFlow()
+
+    val conflicts: StateFlow<List<uz.farzandim.teacher.data.model.GradeConflictItem>> = combine(
+        journalRepository.getConflictGradesFlow(),
+        students,
+        subjects
+    ) { conflictEntities, studs, subjs ->
+        val studentMap = studs.associateBy { it.id }
+        val subjectMap = subjs.associateBy { it.id }
+
+        conflictEntities.map { ce ->
+            val student = studentMap[ce.studentId]
+            val subject = subjectMap[ce.subjectId]
+            val sName = if (student != null) "${student.lastName} ${student.firstName}" else "O'quvchi #${ce.studentId}"
+            val subName = subject?.name ?: "Fan #${ce.subjectId}"
+
+            uz.farzandim.teacher.data.model.GradeConflictItem(
+                localId = ce.localId,
+                studentId = ce.studentId,
+                studentName = sName,
+                subjectId = ce.subjectId,
+                subjectName = subName,
+                lessonNumber = ce.lessonNumber,
+                gradeDate = ce.gradeDate,
+                localValue = ce.value,
+                remoteValue = ce.conflictRemoteValue ?: "-",
+                remoteGradeId = ce.conflictRemoteId
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     /**
      * For each student (by studentId), how many days before the SELECTED JOURNAL DATE
      * did they last receive a MASTERY/DAILY grade in the SELECTED subject?
@@ -410,5 +442,39 @@ class JournalViewModel(
 
     fun triggerManualSync() {
         syncManager.triggerImmediateSync()
+    }
+
+    fun resolveConflictKeepLocal(conflict: uz.farzandim.teacher.data.model.GradeConflictItem) {
+        viewModelScope.launch {
+            _isResolvingConflict.value = true
+            val res = journalRepository.resolveConflictKeepLocal(conflict.localId)
+            _isResolvingConflict.value = false
+            res.fold(
+                onSuccess = {
+                    _toastMessage.emit("O'zingizning bahoyingiz qoldirildi va serverga saqlandi ✓")
+                    syncManager.updateSyncStatus()
+                },
+                onFailure = { err ->
+                    _toastMessage.emit("Xatolik yuz berdi: ${err.message}")
+                }
+            )
+        }
+    }
+
+    fun resolveConflictAcceptRemote(conflict: uz.farzandim.teacher.data.model.GradeConflictItem) {
+        viewModelScope.launch {
+            _isResolvingConflict.value = true
+            val res = journalRepository.resolveConflictAcceptRemote(conflict.localId)
+            _isResolvingConflict.value = false
+            res.fold(
+                onSuccess = {
+                    _toastMessage.emit("Serverdagi baho qabul qilindi ✓")
+                    syncManager.updateSyncStatus()
+                },
+                onFailure = { err ->
+                    _toastMessage.emit("Xatolik yuz berdi: ${err.message}")
+                }
+            )
+        }
     }
 }

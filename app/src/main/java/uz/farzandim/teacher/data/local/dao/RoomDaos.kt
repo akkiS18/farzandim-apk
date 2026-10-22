@@ -142,6 +142,15 @@ interface GradeDao {
     @Query("SELECT * FROM grades WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingGrades(): List<GradeEntity>
 
+    @Query("SELECT * FROM grades WHERE syncStatus = 'CONFLICT'")
+    fun getConflictGradesFlow(): Flow<List<GradeEntity>>
+
+    @Query("SELECT * FROM grades WHERE syncStatus = 'CONFLICT'")
+    suspend fun getConflictGrades(): List<GradeEntity>
+
+    @Query("SELECT * FROM grades WHERE syncStatus = 'CONFLICT' AND subjectId = :subjectId AND lessonNumber = :lessonNumber AND gradeDate = :gradeDate")
+    fun getConflictGradesForLessonFlow(subjectId: Int, lessonNumber: Int, gradeDate: String): Flow<List<GradeEntity>>
+
     @Query("SELECT * FROM grades WHERE localId IN (:localIds)")
     suspend fun getGradesByLocalIds(localIds: List<String>): List<GradeEntity>
 

@@ -71,6 +71,7 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+shortcut-badger = { group = "me.leolin", name = "ShortcutBadger", version = "1.1.22" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

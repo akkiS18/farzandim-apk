@@ -136,3 +136,16 @@ data class ChangeGradeStatusRequest(
     @SerializedName("status") val status: String,
     @SerializedName("grade_ids") val gradeIds: List<Int> = markUids
 )
+
+data class GradeConflictItem(
+    val localId: String,
+    val studentId: Int,
+    val studentName: String,
+    val subjectId: Int,
+    val subjectName: String,
+    val lessonNumber: Int,
+    val gradeDate: String,
+    val localValue: String,
+    val remoteValue: String,
+    val remoteGradeId: Int?
+)

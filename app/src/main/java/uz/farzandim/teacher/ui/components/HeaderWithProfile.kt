@@ -146,38 +146,55 @@ fun HeaderWithProfile(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Sync Indicator Icon
-                    when (syncState) {
-                        is SyncState.Synced -> {
-                            Icon(
-                                imageVector = Icons.Default.CloudDone,
-                                contentDescription = "Sinxronlangan",
-                                tint = EmeraldBadge,
-                                modifier = Modifier.size(18.dp)
-                            )
+                    // Sync Indicator Icon with Red Badge if pending
+                    BadgedBox(
+                        badge = {
+                            if (syncState is SyncState.Pending && syncState.count > 0) {
+                                Badge(
+                                    containerColor = Color(0xFFEF4444),
+                                    contentColor = Color.White
+                                ) {
+                                    Text(
+                                        text = "${syncState.count}",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
-                        is SyncState.Pending -> {
-                            Icon(
-                                imageVector = Icons.Default.Sync,
-                                contentDescription = "Kutilmoqda",
-                                tint = AmberBadge,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        is SyncState.Syncing -> {
-                            CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                color = Color.White,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                        is SyncState.Offline -> {
-                            Icon(
-                                imageVector = Icons.Default.CloudOff,
-                                contentDescription = "Oflayn",
-                                tint = RoseBadge,
-                                modifier = Modifier.size(18.dp)
-                            )
+                    ) {
+                        when (syncState) {
+                            is SyncState.Synced -> {
+                                Icon(
+                                    imageVector = Icons.Default.CloudDone,
+                                    contentDescription = "Sinxronlangan",
+                                    tint = EmeraldBadge,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            is SyncState.Pending -> {
+                                Icon(
+                                    imageVector = Icons.Default.Sync,
+                                    contentDescription = "Kutilmoqda",
+                                    tint = AmberBadge,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            is SyncState.Syncing -> {
+                                CircularProgressIndicator(
+                                    strokeWidth = 2.dp,
+                                    color = Color.White,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                            is SyncState.Offline -> {
+                                Icon(
+                                    imageVector = Icons.Default.CloudOff,
+                                    contentDescription = "Oflayn",
+                                    tint = RoseBadge,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
                     }
 

@@ -20,14 +20,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uz.farzandim.parent.R
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import uz.farzandim.parent.ui.components.*
 import uz.farzandim.parent.ui.theme.*
 import uz.farzandim.parent.ui.viewmodel.ParentViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: ParentViewModel,
     onOpenDiary: () -> Unit,
+    onOpenComments: () -> Unit,
     onOpenDynamics: () -> Unit,
     onOpenBalance: () -> Unit,
     onOpenMenu: () -> Unit,
@@ -49,59 +52,39 @@ fun DashboardScreen(
 
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppBackground)
-            .verticalScroll(scrollState)
+    PullToRefreshBox(
+        isRefreshing = isLoading,
+        onRefresh = { viewModel.refreshInitialData() },
+        modifier = modifier.fillMaxSize()
     ) {
-        // Top App Bar / Greeting Section
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(top = 16.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .background(AppBackground)
+                .verticalScroll(scrollState)
         ) {
-            Column {
-                Text(
-                    text = "Assalomu alaykum!",
-                    style = Typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = selectedChild?.let { "${it.firstName} ta'lim jarayoni" }
-                        ?: stringResource(id = R.string.app_subtitle),
-                    style = Typography.bodySmall,
-                    color = TextSecondary
-                )
-            }
-
+            // Top App Bar / Greeting Section
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 16.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Refresh button
-                IconButton(
-                    onClick = { viewModel.refreshInitialData() },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            strokeWidth = 2.dp,
-                            color = SkyBluePrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                Column {
+                    Text(
+                        text = "Assalomu alaykum!",
+                        style = Typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = selectedChild?.let { "${it.firstName} ta'lim jarayoni" }
+                            ?: stringResource(id = R.string.app_subtitle),
+                        style = Typography.bodySmall,
+                        color = TextSecondary
+                    )
                 }
 
                 // Notification Bell with Badge
@@ -126,12 +109,12 @@ fun DashboardScreen(
                         color = SoftSlateCard,
                         modifier = Modifier
                             .size(40.dp)
-                            .clickable { onOpenDiary() }
+                            .clickable { onOpenComments() }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
-                                contentDescription = null,
+                                contentDescription = "Izohlar",
                                 tint = TextSecondary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -139,7 +122,6 @@ fun DashboardScreen(
                     }
                 }
             }
-        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -188,4 +170,5 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
     }
+  }
 }

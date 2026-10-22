@@ -130,6 +130,7 @@ fun MainContainerScreen(
                         DashboardScreen(
                             viewModel = viewModel,
                             onOpenDiary = { currentTab = ParentBottomTab.DIARY },
+                            onOpenComments = { currentTab = ParentBottomTab.COMMENTS },
                             onOpenDynamics = { currentSubScreen = SubScreen.DYNAMICS },
                             onOpenBalance = { currentSubScreen = SubScreen.BALANCE },
                             onOpenMenu = { currentSubScreen = SubScreen.MENU },

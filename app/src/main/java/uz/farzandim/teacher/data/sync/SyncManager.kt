@@ -88,6 +88,9 @@ class SyncManager(
             val pendingComments = commentDao.getPendingComments().size
             val totalPending = pendingGrades + pendingComments
 
+            // Update external launcher badge (ShortcutBadger)
+            uz.farzandim.teacher.util.BadgeManager.updateBadge(context, totalPending)
+
             if (!_isOnline.value) {
                 if (totalPending > 0) {
                     _syncState.value = SyncState.Pending(totalPending, "Oflayn rejim — $totalPending ta o'zgarish kutilmoqda")

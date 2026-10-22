@@ -109,6 +109,8 @@ fun JournalScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val selectedGradeCategory by viewModel.selectedGradeCategory.collectAsState()
     val lastGradeDaysAgoMap by viewModel.lastGradeDaysAgoMap.collectAsState()
+    val conflicts by viewModel.conflicts.collectAsState()
+    val isResolvingConflict by viewModel.isResolvingConflict.collectAsState()
 
     val currentDayTheme = remember(selectedDate) { getWeekdayTheme(selectedDate) }
 
@@ -1248,6 +1250,16 @@ fun JournalScreen(
                     }
                 )
             }
+        }
+
+        val activeConflict = conflicts.firstOrNull()
+        if (activeConflict != null) {
+            uz.farzandim.teacher.ui.components.GradeConflictDialog(
+                conflict = activeConflict,
+                isResolving = isResolvingConflict,
+                onKeepLocal = { viewModel.resolveConflictKeepLocal(activeConflict) },
+                onAcceptRemote = { viewModel.resolveConflictAcceptRemote(activeConflict) }
+            )
         }
     }
 }

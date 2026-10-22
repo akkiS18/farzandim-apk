@@ -97,6 +97,9 @@ dependencies {
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 
+    // ShortcutBadger (App Icon Badge)
+    implementation(libs.shortcut.badger)
+
     // DataStore Preferences
     implementation(libs.androidx.datastore.preferences)
 

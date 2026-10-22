@@ -54,3 +54,9 @@
 -keep class androidx.compose.** { *; }
 -dontwarn androidx.compose.**
 
+# --- ShortcutBadger ---
+-keep class me.leolin.shortcutbadger.** { *; }
+-keep interface me.leolin.shortcutbadger.** { *; }
+-dontwarn me.leolin.shortcutbadger.**
+
+
