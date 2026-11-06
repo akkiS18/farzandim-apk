@@ -12,11 +12,16 @@ import org.koin.androidx.compose.koinViewModel
 import uz.farzandim.teacher.ui.screens.auth.LoginScreen
 import uz.farzandim.teacher.ui.screens.comments.CommentScreen
 import uz.farzandim.teacher.ui.screens.main.MainScreen
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import uz.farzandim.teacher.ui.screens.pin.PinLockScreen
 import uz.farzandim.teacher.ui.screens.pin.PinSetupScreen
 import uz.farzandim.teacher.ui.viewmodel.AuthUiState
 import uz.farzandim.teacher.ui.viewmodel.AuthViewModel
 import uz.farzandim.teacher.ui.viewmodel.CommentViewModel
+
+private const val RELOCK_TIMEOUT_MS = 5 * 60 * 1000L
 
 @Composable
 fun AppNavigation(
@@ -27,6 +32,29 @@ fun AppNavigation(
     val uiState by authViewModel.uiState.collectAsState()
     val isPinSet by sessionManager.isPinSetFlow.collectAsState(initial = null)
     var isUnlocked by rememberSaveable { mutableStateOf(false) }
+    var backgroundedAt by rememberSaveable { mutableLongStateOf(0L) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    backgroundedAt = System.currentTimeMillis()
+                }
+                Lifecycle.Event.ON_START -> {
+                    if (backgroundedAt > 0L && System.currentTimeMillis() - backgroundedAt > RELOCK_TIMEOUT_MS) {
+                        isUnlocked = false
+                    }
+                    backgroundedAt = 0L
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     if (!isSessionChecked || isPinSet == null) {
         // Checking offline session and PIN state

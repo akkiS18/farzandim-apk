@@ -64,6 +64,7 @@ class ParentViewModel(
     }
 
     private val _networkGrades = MutableStateFlow<List<ParentGradeEntity>>(emptyList())
+    private var selectChildJob: kotlinx.coroutines.Job? = null
 
     val grades: StateFlow<List<ParentGradeEntity>> = _selectedChildId
         .filterNotNull()
@@ -72,7 +73,8 @@ class ParentViewModel(
                 repository.getGradesFlow(studentId).catch { emit(emptyList()) },
                 _networkGrades
             ) { dbList, netList ->
-                if (netList.isNotEmpty()) netList else dbList
+                val scopedNet = netList.filter { it.studentId == studentId }
+                if (dbList.isNotEmpty()) dbList else scopedNet
             }
         }
         .catch { emit(emptyList()) }
@@ -131,24 +133,38 @@ class ParentViewModel(
         .catch { emit(emptyList()) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    private val _aiReport = MutableStateFlow<AiReportDto?>(null)
-    val aiReport: StateFlow<AiReportDto?> = _aiReport.asStateFlow()
+    private val _aiReport = MutableStateFlow<AiWeeklyReportDto?>(null)
+    val aiReport: StateFlow<AiWeeklyReportDto?> = _aiReport.asStateFlow()
+
+    private val _isAiReportLoading = MutableStateFlow(false)
+    val isAiReportLoading: StateFlow<Boolean> = _isAiReportLoading.asStateFlow()
 
     fun selectChild(studentId: Int) {
+        selectChildJob?.cancel()
         _selectedChildId.value = studentId
         _networkGrades.value = emptyList()
-        viewModelScope.launch {
+        _nextCharge.value = null
+        _balanceHistory.value = emptyList()
+        _aiReport.value = null
+
+        selectChildJob = viewModelScope.launch {
             try {
                 repository.fetchGrades(studentId).onSuccess { list ->
-                    _networkGrades.value = list
+                    if (_selectedChildId.value == studentId) {
+                        _networkGrades.value = list.filter { it.studentId == studentId }
+                    }
                 }
                 repository.getNextCharge(studentId).onSuccess {
-                    _nextCharge.value = it
+                    if (_selectedChildId.value == studentId) {
+                        _nextCharge.value = it
+                    }
                 }
                 val child = children.value.find { it.id == studentId }
                 if (child?.classId != null) {
                     repository.fetchSchedule(child.classId)
                 }
+            } catch (c: kotlinx.coroutines.CancellationException) {
+                throw c
             } catch (t: Throwable) {
                 android.util.Log.e("ParentViewModel", "Error in selectChild", t)
             }
@@ -172,18 +188,32 @@ class ParentViewModel(
             _isLoading.value = true
             try {
                 repository.fetchChildren().onSuccess { list ->
+                    _networkChildren.value = list
                     if (list.isNotEmpty()) {
-                        _networkChildren.value = list
-                        val activeId = _selectedChildId.value ?: list.first().id
+                        val currentId = _selectedChildId.value
+                        val activeId = if (currentId != null && list.any { it.id == currentId }) {
+                            currentId
+                        } else {
+                            list.first().id
+                        }
                         _selectedChildId.value = activeId
                         repository.fetchGrades(activeId).onSuccess { gList ->
-                            _networkGrades.value = gList
+                            if (_selectedChildId.value == activeId) {
+                                _networkGrades.value = gList.filter { it.studentId == activeId }
+                            }
                         }
                         val activeChild = list.find { it.id == activeId }
                         if (activeChild?.classId != null) {
                             repository.fetchSchedule(activeChild.classId)
                         }
-                        repository.getNextCharge(activeId).onSuccess { _nextCharge.value = it }
+                        repository.getNextCharge(activeId).onSuccess {
+                            if (_selectedChildId.value == activeId) {
+                                _nextCharge.value = it
+                            }
+                        }
+                    } else {
+                        _selectedChildId.value = null
+                        _networkGrades.value = emptyList()
                     }
                 }
                 repository.fetchHolidays()
@@ -235,7 +265,9 @@ class ParentViewModel(
     fun fetchBalanceHistory(studentId: Int) {
         viewModelScope.launch {
             repository.getBalanceHistory(studentId).onSuccess {
-                _balanceHistory.value = it
+                if (_selectedChildId.value == studentId) {
+                    _balanceHistory.value = it
+                }
             }
         }
     }
@@ -272,10 +304,19 @@ class ParentViewModel(
         }
     }
 
-    fun fetchAiReport() {
+    fun fetchAiReport(studentId: Int? = null) {
+        val targetId = studentId ?: _selectedChildId.value ?: return
         viewModelScope.launch {
-            repository.getLatestAiReport().onSuccess {
-                _aiReport.value = it
+            _isAiReportLoading.value = true
+            try {
+                repository.getLatestAiReport(targetId).onSuccess {
+                    if (_selectedChildId.value == targetId) {
+                        _aiReport.value = it
+                    }
+                }
+            } catch (_: Exception) {
+            } finally {
+                _isAiReportLoading.value = false
             }
         }
     }

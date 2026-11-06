@@ -3,6 +3,7 @@ package uz.farzandim.teacher.util
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import uz.farzandim.teacher.BuildConfig
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,6 +25,16 @@ object AppLogger {
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
     val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
 
+    private val sensitivePattern = Regex(
+        """("(?:password|token|refresh_token|refreshToken|accessToken)"\s*:\s*)"[^"]*"""",
+        RegexOption.IGNORE_CASE
+    )
+
+    fun redact(text: String?): String? {
+        if (text == null) return null
+        return sensitivePattern.replace(text, "$1\"[REDACTED]\"")
+    }
+
     fun log(
         method: String,
         url: String,
@@ -33,15 +44,17 @@ object AppLogger {
         responseBody: String? = null,
         error: String? = null
     ) {
+        if (!BuildConfig.DEBUG) return
+
         val isErr = (statusCode != null && statusCode !in 200..299) || error != null
         val entry = LogEntry(
             method = method,
             url = url,
             statusCode = statusCode,
             durationMs = durationMs,
-            requestBody = requestBody,
-            responseBody = responseBody,
-            error = error,
+            requestBody = redact(requestBody),
+            responseBody = redact(responseBody),
+            error = redact(error),
             isError = isErr
         )
         val current = _logs.value.toMutableList()
@@ -58,17 +71,23 @@ object AppLogger {
     }
 
     fun i(tag: String, message: String) {
-        android.util.Log.i(tag, message)
-        log(method = tag, url = message)
+        if (!BuildConfig.DEBUG) return
+        val safeMsg = redact(message) ?: ""
+        android.util.Log.i(tag, safeMsg)
+        log(method = tag, url = safeMsg)
     }
 
     fun w(tag: String, message: String) {
-        android.util.Log.w(tag, message)
-        log(method = tag, url = message, error = message)
+        if (!BuildConfig.DEBUG) return
+        val safeMsg = redact(message) ?: ""
+        android.util.Log.w(tag, safeMsg)
+        log(method = tag, url = safeMsg, error = safeMsg)
     }
 
     fun e(tag: String, message: String) {
-        android.util.Log.e(tag, message)
-        log(method = tag, url = message, error = message)
+        if (!BuildConfig.DEBUG) return
+        val safeMsg = redact(message) ?: ""
+        android.util.Log.e(tag, safeMsg)
+        log(method = tag, url = safeMsg, error = safeMsg)
     }
 }

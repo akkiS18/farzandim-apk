@@ -30,7 +30,7 @@ val databaseModule = module {
             AppDatabase::class.java,
             "farzandim_teacher.db"
         )
-            .fallbackToDestructiveMigration()
+            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
             .build()
     }
 
@@ -57,7 +57,11 @@ val networkModule = module {
 
     single {
         HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (uz.farzandim.teacher.BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
     }
 
@@ -66,8 +70,12 @@ val networkModule = module {
             .addInterceptor(get<DynamicBaseUrlInterceptor>())
             .addInterceptor(get<TenantInterceptor>())
             .addInterceptor(get<AuthInterceptor>())
-            .addInterceptor(get<uz.farzandim.teacher.data.remote.NetworkDebugInterceptor>())
-            .addInterceptor(get<HttpLoggingInterceptor>())
+            .apply {
+                if (uz.farzandim.teacher.BuildConfig.DEBUG) {
+                    addInterceptor(get<uz.farzandim.teacher.data.remote.NetworkDebugInterceptor>())
+                    addInterceptor(get<HttpLoggingInterceptor>())
+                }
+            }
             .authenticator(get<TokenAuthenticator>())
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)

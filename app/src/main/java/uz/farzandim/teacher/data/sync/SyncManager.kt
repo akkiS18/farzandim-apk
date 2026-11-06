@@ -101,10 +101,10 @@ class SyncManager(
                 if (totalPending > 0) {
                     _syncState.value = SyncState.Pending(totalPending, "$totalPending ta o'zgarish sinxronlanmoqda...")
                 } else {
-                    val now = System.currentTimeMillis()
-                    _lastSyncedAt.value = now
-                    sessionManager.saveLastSyncedAt(now)
-                    _syncState.value = SyncState.Synced(syncedAt = now)
+                    val stored = sessionManager.getLastSyncedAt()
+                    val ts = if (stored != null && stored > 0L) stored else System.currentTimeMillis()
+                    _lastSyncedAt.value = ts
+                    _syncState.value = SyncState.Synced(syncedAt = ts)
                 }
             }
         }
@@ -121,9 +121,14 @@ class SyncManager(
 
         workManager.enqueueUniqueWork(
             "GRADE_SYNC_WORK_IMMEDIATE",
-            ExistingWorkPolicy.REPLACE,
+            ExistingWorkPolicy.KEEP,
             syncRequest
         )
+    }
+
+    fun cancelAllSyncWork() {
+        workManager.cancelUniqueWork("GRADE_SYNC_WORK_IMMEDIATE")
+        workManager.cancelUniqueWork("GRADE_SYNC_WORK_PERIODIC")
     }
 
     private fun setupPeriodicSync() {

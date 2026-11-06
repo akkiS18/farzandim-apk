@@ -200,6 +200,10 @@ class SessionManager(private val context: Context) {
     }
 
     suspend fun clearSession() {
+        try {
+            androidx.work.WorkManager.getInstance(context).cancelUniqueWork("FarzandimParentSyncWorker")
+        } catch (_: Exception) {}
+
         context.dataStore.edit {
             it.remove(KEY_TOKEN)
             it.remove(KEY_REFRESH_TOKEN)

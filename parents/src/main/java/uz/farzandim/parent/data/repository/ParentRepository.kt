@@ -50,7 +50,15 @@ class ParentRepository(
                     )
                 }
                 try {
-                    childDao.insertChildren(entities)
+                    if (entities.isEmpty()) {
+                        childDao.clearChildren()
+                    } else {
+                        val activeIds = entities.map { it.id }
+                        childDao.deleteRemovedChildren(activeIds)
+                        gradeDao.deleteGradesForRemovedChildren(activeIds)
+                        clubDao.deleteClubsForRemovedChildren(activeIds)
+                        childDao.insertChildren(entities)
+                    }
                 } catch (dbEx: Exception) {
                     android.util.Log.w("ParentRepository", "Failed to cache children into Room: ${dbEx.message}")
                 }
@@ -501,13 +509,13 @@ class ParentRepository(
     }
 
     // 13. AI Report
-    suspend fun getLatestAiReport(): Result<AiReportDto> {
+    suspend fun getLatestAiReport(studentId: Int): Result<AiWeeklyReportDto?> {
         return try {
-            val response = apiService.getLatestAiReport()
+            val response = apiService.getLatestAiReport(studentId)
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                Result.success(response.body()!!.report)
             } else {
-                Result.failure(Exception("AI hisobot topilmadi"))
+                Result.failure(Exception("AI hisobotini yuklab bo'lmadi: HTTP ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

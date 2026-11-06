@@ -3,6 +3,7 @@ package uz.farzandim.parent.util
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import uz.farzandim.parent.BuildConfig
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,6 +25,16 @@ object AppLogger {
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
     val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
 
+    private val sensitivePattern = Regex(
+        """("(?:password|token|refresh_token|refreshToken|accessToken)"\s*:\s*)"[^"]*"""",
+        RegexOption.IGNORE_CASE
+    )
+
+    fun redact(text: String?): String? {
+        if (text == null) return null
+        return sensitivePattern.replace(text, "$1\"[REDACTED]\"")
+    }
+
     fun log(
         method: String,
         url: String,
@@ -33,15 +44,17 @@ object AppLogger {
         responseBody: String? = null,
         error: String? = null
     ) {
+        if (!BuildConfig.DEBUG) return
+
         val isErr = (statusCode != null && statusCode !in 200..299) || error != null
         val entry = LogEntry(
             method = method,
             url = url,
             statusCode = statusCode,
             durationMs = durationMs,
-            requestBody = requestBody,
-            responseBody = responseBody,
-            error = error,
+            requestBody = redact(requestBody),
+            responseBody = redact(responseBody),
+            error = redact(error),
             isError = isErr
         )
         val current = _logs.value.toMutableList()

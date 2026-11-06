@@ -83,9 +83,12 @@ data class MenuEntity(
     val notes: String?
 )
 
-@Entity(tableName = "clubs")
+@Entity(
+    tableName = "clubs",
+    primaryKeys = ["id", "studentId"]
+)
 data class ClubEntity(
-    @PrimaryKey val id: Int,
+    val id: Int,
     val studentId: Int,
     val name: String,
     val description: String?,

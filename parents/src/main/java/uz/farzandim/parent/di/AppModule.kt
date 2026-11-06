@@ -31,8 +31,7 @@ val databaseModule = module {
             ParentDatabase::class.java,
             "farzandim_parent_v4.db"
         )
-            .fallbackToDestructiveMigration()
-            .fallbackToDestructiveMigrationOnDowngrade()
+            .addMigrations(ParentDatabase.MIGRATION_4_5)
             .build()
     }
 
@@ -56,7 +55,11 @@ val networkModule = module {
 
     single {
         HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (uz.farzandim.parent.BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
     }
 
@@ -65,8 +68,12 @@ val networkModule = module {
             .addInterceptor(get<DynamicBaseUrlInterceptor>())
             .addInterceptor(get<TenantInterceptor>())
             .addInterceptor(get<AuthInterceptor>())
-            .addInterceptor(get<NetworkDebugInterceptor>())
-            .addInterceptor(get<HttpLoggingInterceptor>())
+            .apply {
+                if (uz.farzandim.parent.BuildConfig.DEBUG) {
+                    addInterceptor(get<NetworkDebugInterceptor>())
+                    addInterceptor(get<HttpLoggingInterceptor>())
+                }
+            }
             .authenticator(get<TokenAuthenticator>())
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
@@ -90,7 +97,7 @@ val networkModule = module {
 val repositoryModule = module {
     single { AuthRepository(get(), get(), get(), get()) }
     single { ParentRepository(get(), get(), get()) }
-    single { SyncManager(androidContext(), get(), get()) }
+    single { SyncManager(androidContext(), get(), get(), get()) }
 }
 
 val viewModelModule = module {

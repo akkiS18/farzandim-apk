@@ -128,6 +128,12 @@
     <string name="logout_confirm_title">Confirm Logout</string>
     <string name="logout_confirm_msg">Are you sure you want to log out?</string>
 
+    <!-- About & Legal -->
+    <string name="about_app_section">About &amp; Legal</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="app_version">Farzandim Parent • Version 1.0</string>
+
     <!-- Error & Common -->
     <string name="error_generic">Something went wrong</string>
     <string name="error_network">Server connection error</string>

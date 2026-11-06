@@ -126,7 +126,7 @@ class AuthRepository(
                     schoolDao.insertSchools(listOf(SchoolEntity(resolvedSchoolId, schoolName, isSelected = true)))
                 }
 
-                // 2. Cache in Room for offline session verification
+                // 2. Cache user profile metadata in Room (tokens kept only in SessionManager)
                 sessionDao.insertSession(
                     UserSessionEntity(
                         id = user.id,
@@ -138,8 +138,8 @@ class AuthRepository(
                         documentNo = user.documentNo ?: request.documentNo,
                         schoolId = resolvedSchoolId,
                         schoolName = schoolName,
-                        token = data.token,
-                        refreshToken = data.refreshToken
+                        token = "",
+                        refreshToken = null
                     )
                 )
 
@@ -165,6 +165,7 @@ class AuthRepository(
     }
 
     suspend fun logout() = withContext(Dispatchers.IO) {
+        uz.farzandim.teacher.util.AppLogger.clear()
         try {
             sessionDao.clearSession()
         } catch (e: Exception) {

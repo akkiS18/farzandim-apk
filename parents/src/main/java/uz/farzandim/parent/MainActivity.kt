@@ -12,11 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -28,6 +31,8 @@ import uz.farzandim.parent.ui.screens.pin.PinScreenMode
 import uz.farzandim.parent.ui.theme.*
 import uz.farzandim.parent.ui.viewmodel.AuthViewModel
 import uz.farzandim.parent.util.LocaleHelper
+
+private const val RELOCK_TIMEOUT_MS = 5 * 60 * 1000L
 
 class MainActivity : FragmentActivity() {
 
@@ -71,6 +76,29 @@ class MainActivity : FragmentActivity() {
                     val isPinSet by authViewModel.isPinSet.collectAsState()
 
                     var isUnlocked by rememberSaveable { mutableStateOf(false) }
+                    var backgroundedAt by rememberSaveable { mutableLongStateOf(0L) }
+                    val lifecycleOwner = LocalLifecycleOwner.current
+
+                    DisposableEffect(lifecycleOwner) {
+                        val observer = LifecycleEventObserver { _, event ->
+                            when (event) {
+                                Lifecycle.Event.ON_STOP -> {
+                                    backgroundedAt = System.currentTimeMillis()
+                                }
+                                Lifecycle.Event.ON_START -> {
+                                    if (backgroundedAt > 0L && System.currentTimeMillis() - backgroundedAt > RELOCK_TIMEOUT_MS) {
+                                        isUnlocked = false
+                                    }
+                                    backgroundedAt = 0L
+                                }
+                                else -> {}
+                            }
+                        }
+                        lifecycleOwner.lifecycle.addObserver(observer)
+                        onDispose {
+                            lifecycleOwner.lifecycle.removeObserver(observer)
+                        }
+                    }
 
                     when (isAuthenticated) {
                         null -> {

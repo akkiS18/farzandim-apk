@@ -9,10 +9,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingFlat
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uz.farzandim.parent.R
@@ -33,10 +37,14 @@ fun AiReportScreen(
     modifier: Modifier = Modifier
 ) {
     val aiReport by viewModel.aiReport.collectAsState()
+    val isAiReportLoading by viewModel.isAiReportLoading.collectAsState()
     val selectedChild by viewModel.selectedChild.collectAsState()
+    val selectedChildId by viewModel.selectedChildId.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchAiReport()
+    LaunchedEffect(selectedChildId) {
+        if (selectedChildId != null) {
+            viewModel.fetchAiReport(selectedChildId)
+        }
     }
 
     val scrollState = rememberScrollState()
@@ -67,237 +75,350 @@ fun AiReportScreen(
                 color = TextPrimary,
                 modifier = Modifier.padding(start = 8.dp)
             )
+            Spacer(modifier = Modifier.weight(1f))
+            if (isAiReportLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = SkyBluePrimary
+                )
+            } else {
+                IconButton(onClick = { viewModel.fetchAiReport() }) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        tint = TextSecondary
+                    )
+                }
+            }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // AI Hero Card
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xFF0F172A),
-                shadowElevation = 2.dp,
-                modifier = Modifier.fillMaxWidth()
+        val report = aiReport
+        val hasRealReport = report != null && !report.reportText.isNullOrBlank()
+
+        if (isAiReportLoading && report == null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    CircularProgressIndicator(color = SkyBluePrimary)
+                    Text(
+                        text = "Hisobot yuklanmoqda...",
+                        style = Typography.bodyMedium,
+                        color = TextSecondary
+                    )
+                }
+            }
+        } else if (!hasRealReport) {
+            // Honest empty state when no report has been generated on backend
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = CardBackground,
+                    border = BorderStroke(1.dp, CardBorder),
+                    shadowElevation = 1.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0xFF1E293B),
-                            modifier = Modifier.size(36.dp)
+                            color = SkyBlueContainer,
+                            modifier = Modifier.size(64.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
-                                    tint = SkyBlueLight,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = SkyBluePrimary,
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
                         }
+
                         Text(
-                            text = "Sun'iy Intellekt Tahlili",
+                            text = "Haftalik AI hisoboti mavjud emas",
                             style = Typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = TextPrimary,
+                            textAlign = TextAlign.Center
                         )
-                    }
 
-                    Text(
-                        text = aiReport?.summary
-                            ?: "Farzandingiz ${selectedChild?.firstName ?: ""}ning so'nggi haftalardagi o'zlashtirish ko'rsatkichlari, qiziqishlari va darsdagi faolligi asosida tuzilgan avtomatik hisobot.",
-                        style = Typography.bodyMedium,
-                        color = Color(0xFFCBD5E1),
-                        lineHeight = 22.sp
-                    )
-                }
-            }
-
-            // Strengths
-            val strengths = aiReport?.strengths ?: listOf(
-                "Matematika fanidan a'lo darajadagi mantiqiy fikrlash",
-                "Darslarga o'z vaqtida qatnashish va faol javob berish",
-                "Guruh bilan ishlashda do'stona xulq-atvor"
-            )
-
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = CardBackground,
-                border = BorderStroke(1.dp, CardBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = GradeMintText,
-                            modifier = Modifier.size(22.dp)
-                        )
+                        val childName = selectedChild?.firstName ?: "Farzandingiz"
                         Text(
-                            text = "Kuchli tomonlari",
-                            style = Typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            text = "$childName uchun ushbu davrda sun'iy intellekt haftalik tahlili hali shakllantirilmagan. Maktab ma'muriyati yoki tizim hisobot generatsiya qilgach, natijalar shu yerda avtomatik ko'rinadi.",
+                            style = Typography.bodyMedium,
+                            color = TextSecondary,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
                         )
-                    }
 
-                    strengths.forEach { item ->
-                        Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        OutlinedButton(
+                            onClick = { viewModel.fetchAiReport() },
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, SkyBluePrimary)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(top = 6.dp)
-                                    .size(6.dp)
-                                    .background(GradeMintText, CircleShape)
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                tint = SkyBluePrimary,
+                                modifier = Modifier.size(18.dp)
                             )
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = item,
-                                style = Typography.bodyMedium,
-                                color = TextPrimary
+                                text = "Qayta tekshirish",
+                                color = SkyBluePrimary,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
                 }
             }
-
-            // Areas to improve
-            val areas = aiReport?.areasToImprove ?: listOf(
-                "Ingliz tili lug'at boyligini yanada oshirish tavsiya etiladi",
-                "Uy vazifalarini kechiktirmasdan bajarishga e'tibor qaratish"
-            )
-
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = CardBackground,
-                border = BorderStroke(1.dp, CardBorder),
-                modifier = Modifier.fillMaxWidth()
+        } else {
+            // Genuine report from backend
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // Hero Card with week metadata
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFF0F172A),
+                    shadowElevation = 2.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                            contentDescription = null,
-                            tint = GradeAmberText,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Text(
-                            text = "Rivojlantirish mumkin bo'lgan sohalar",
-                            style = Typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                    }
-
-                    areas.forEach { item ->
                         Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(top = 6.dp)
-                                    .size(6.dp)
-                                    .background(GradeAmberText, CircleShape)
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF1E293B),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = SkyBlueLight,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "Sun'iy Intellekt Tahlili",
+                                style = Typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        val childName = selectedChild?.firstName ?: ""
+                        val weekInfo = if (!report?.startDate.isNullOrBlank() && !report?.endDate.isNullOrBlank()) {
+                            "${report?.startDate} — ${report?.endDate}"
+                        } else if (report?.weekNumber != null && report?.year != null) {
+                            "${report.year}-yil, ${report.weekNumber}-hafta"
+                        } else {
+                            "Haftalik tahlil"
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = Color(0xFF94A3B8),
+                                modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = item,
-                                style = Typography.bodyMedium,
-                                color = TextPrimary
+                                text = "$childName • $weekInfo",
+                                style = Typography.bodySmall,
+                                color = Color(0xFF94A3B8)
                             )
                         }
                     }
                 }
-            }
 
-            // Recommendations
-            val recommendations = aiReport?.recommendations ?: listOf(
-                "Har kuni 20 daqiqa mustaqil badiiy kitob o'qish",
-                "Dam olish kunlarida maktab kutubxonasidagi qo'shimcha adabiyotlardan foydalanish"
-            )
+                // Summary Stats from backend summary_json (if available)
+                val summary = report?.summaryJson
+                if (summary != null && summary.isNotEmpty()) {
+                    val avgGrade = (summary["average_grade"] as? Number)?.toDouble()
+                    val trend = summary["grade_trend"] as? String
+                    val totalGrades = (summary["total_grades"] as? Number)?.toInt()
+                    val booksRead = (summary["books_read_count"] as? Number)?.toInt()
 
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = CardBackground,
-                border = BorderStroke(1.dp, CardBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = CardBackground,
+                        border = BorderStroke(1.dp, CardBorder),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Lightbulb,
-                            contentDescription = null,
-                            tint = SkyBluePrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Text(
-                            text = "Ota-onaga tavsiyalar",
-                            style = Typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                    }
-
-                    recommendations.forEach { item ->
                         Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(top = 6.dp)
-                                    .size(6.dp)
-                                    .background(SkyBluePrimary, CircleShape)
-                            )
+                            if (avgGrade != null && avgGrade > 0) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = String.format(java.util.Locale.US, "%.1f", avgGrade),
+                                        style = Typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SkyBluePrimary
+                                    )
+                                    Text(
+                                        text = "O'rtacha baho",
+                                        style = Typography.bodySmall,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            if (!trend.isNullOrBlank()) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        val icon = when (trend.uppercase()) {
+                                            "UP" -> Icons.AutoMirrored.Filled.TrendingUp
+                                            "DOWN" -> Icons.AutoMirrored.Filled.TrendingDown
+                                            else -> Icons.AutoMirrored.Filled.TrendingFlat
+                                        }
+                                        val color = when (trend.uppercase()) {
+                                            "UP" -> GradeMintText
+                                            "DOWN" -> GradeCoralText
+                                            else -> SkyBluePrimary
+                                        }
+                                        Icon(
+                                            imageVector = icon,
+                                            contentDescription = null,
+                                            tint = color,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = when (trend.uppercase()) {
+                                                "UP" -> "O'sish"
+                                                "DOWN" -> "Pasayish"
+                                                else -> "Barqaror"
+                                            },
+                                            style = Typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = color
+                                        )
+                                    }
+                                    Text(
+                                        text = "Dinamika",
+                                        style = Typography.bodySmall,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            if (totalGrades != null && totalGrades > 0) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "$totalGrades ta",
+                                        style = Typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = "Baholar soni",
+                                        style = Typography.bodySmall,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            if (booksRead != null && booksRead > 0) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "$booksRead ta",
+                                        style = Typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = "Kitob mutolaasi",
+                                        style = Typography.bodySmall,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Main Report Text from AI
+                val fullText = report?.reportText.orEmpty()
+                if (fullText.isNotBlank()) {
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = CardBackground,
+                        border = BorderStroke(1.dp, CardBorder),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.School,
+                                    contentDescription = null,
+                                    tint = SkyBluePrimary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Text(
+                                    text = "Haftalik Xulosa va Tahlil",
+                                    style = Typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                            }
+
                             Text(
-                                text = item,
+                                text = fullText,
                                 style = Typography.bodyMedium,
-                                color = TextPrimary
+                                color = TextPrimary,
+                                lineHeight = 24.sp
                             )
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }

@@ -128,6 +128,12 @@
     <string name="logout_confirm_title">Chiqishni tasdiqlaysizmi?</string>
     <string name="logout_confirm_msg">Hisobingizdan chiqmoqchimisiz?</string>
 
+    <!-- About & Legal -->
+    <string name="about_app_section">Ilova haqida va Qoidalar</string>
+    <string name="privacy_policy">Maxfiylik siyosati</string>
+    <string name="terms_of_service">Foydalanish shartlari</string>
+    <string name="app_version">Farzandim Ota-ona • Versiya 1.0</string>
+
     <!-- Error & Common -->
     <string name="error_generic">Xatolik yuz berdi</string>
     <string name="error_network">Server bilan bog\'lanishda xatolik</string>

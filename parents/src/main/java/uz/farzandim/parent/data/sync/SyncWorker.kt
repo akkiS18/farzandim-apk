@@ -15,8 +15,8 @@ class SyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            syncManager.flushSyncQueue()
-            Result.success()
+            val allClean = syncManager.flushSyncQueueWithStatus()
+            if (allClean) Result.success() else Result.retry()
         } catch (e: Exception) {
             Result.retry()
         }

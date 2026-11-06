@@ -1,6 +1,8 @@
 package uz.farzandim.parent.ui.screens.settings
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -304,9 +307,126 @@ fun SettingsScreen(
             }
         }
 
+        // 5. About & Legal Section
+        Text(
+            text = stringResource(id = R.string.about_app_section),
+            style = Typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = CardBackground,
+            border = BorderStroke(1.dp, CardBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            ) {
+                // Privacy Policy
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim.uz/privacy"))
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PrivacyTip,
+                            contentDescription = null,
+                            tint = SkyBluePrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Text(
+                            text = stringResource(id = R.string.privacy_policy),
+                            style = Typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = null,
+                        tint = TextMuted,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                HorizontalDivider(
+                    color = CardBorder,
+                    thickness = 0.8.dp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                // Terms of Service
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim.uz/terms"))
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = SkyBluePrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Text(
+                            text = stringResource(id = R.string.terms_of_service),
+                            style = Typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = null,
+                        tint = TextMuted,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+
+        // App Version
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(id = R.string.app_version),
+                style = Typography.bodySmall,
+                color = TextMuted
+            )
+        }
+
         Spacer(modifier = Modifier.height(6.dp))
 
-        // 5. Logout Button
+        // 6. Logout Button
         Button(
             onClick = { showLogoutDialog = true },
             shape = RoundedCornerShape(14.dp),

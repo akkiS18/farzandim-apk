@@ -5,6 +5,7 @@ import androidx.work.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import uz.farzandim.parent.data.local.dao.ParentGradeDao
 import uz.farzandim.parent.data.local.dao.SyncQueueDao
 import uz.farzandim.parent.data.model.CreateGradeCommentRequest
 import uz.farzandim.parent.data.model.CreateMenuCommentRequest
@@ -15,53 +16,73 @@ import java.util.concurrent.TimeUnit
 class SyncManager(
     private val context: Context,
     private val apiService: ApiService,
-    private val syncQueueDao: SyncQueueDao
+    private val syncQueueDao: SyncQueueDao,
+    private val gradeDao: ParentGradeDao? = null
 ) {
-    suspend fun flushSyncQueue(): Int = withContext(Dispatchers.IO) {
+    suspend fun flushSyncQueue(): Int = flushInternal().first
+
+    suspend fun flushSyncQueueWithStatus(): Boolean = flushInternal().second
+
+    private suspend fun flushInternal(): Pair<Int, Boolean> = withContext(Dispatchers.IO) {
         try {
             val pending = syncQueueDao.getPendingItems()
             var syncedCount = 0
+            var hasTransientFailure = false
 
             for (item in pending) {
                 try {
                     val json = JSONObject(item.payloadJson)
-                    val success = when (item.actionType) {
+                    val response = when (item.actionType) {
                         "PARENT_APPROVE_GRADE" -> {
                             val gradeId = json.getInt("grade_id")
-                            apiService.parentApproveGrade(gradeId).isSuccessful
+                            apiService.parentApproveGrade(gradeId)
                         }
                         "VOTE_POLL" -> {
                             val annId = json.getInt("announcement_id")
                             val optionId = json.getInt("option_id")
-                            apiService.votePoll(annId, VotePollRequest(optionId)).isSuccessful
+                            apiService.votePoll(annId, VotePollRequest(optionId))
                         }
                         "CREATE_GRADE_COMMENT" -> {
                             val gradeId = json.getInt("grade_id")
                             val content = json.getString("content")
-                            apiService.createGradeComment(gradeId, CreateGradeCommentRequest(content)).isSuccessful
+                            apiService.createGradeComment(gradeId, CreateGradeCommentRequest(content))
                         }
                         "CREATE_MENU_COMMENT" -> {
                             val menuDate = json.getString("menu_date")
                             val content = json.getString("content")
-                            apiService.createMenuComment(CreateMenuCommentRequest(menuDate, content)).isSuccessful
+                            apiService.createMenuComment(CreateMenuCommentRequest(menuDate, content))
                         }
-                        else -> false
+                        else -> null
                     }
 
-                    if (success) {
+                    if (response == null) {
+                        syncQueueDao.dequeue(item.id)
+                    } else if (response.isSuccessful) {
                         syncQueueDao.dequeue(item.id)
                         syncedCount++
+                    } else if (response.code() in listOf(400, 403, 404, 409, 422)) {
+                        // Permanent client/authorization rejection: revert optimistic UI and remove from queue
+                        if (item.actionType == "PARENT_APPROVE_GRADE") {
+                            val gradeId = json.optInt("grade_id", -1)
+                            if (gradeId > 0) {
+                                gradeDao?.markUnapprovedLocally(gradeId)
+                            }
+                        }
+                        syncQueueDao.dequeue(item.id)
                     } else {
+                        // Transient 5xx / rate limit error
                         syncQueueDao.incrementRetry(item.id)
+                        hasTransientFailure = true
                     }
                 } catch (e: Exception) {
                     syncQueueDao.incrementRetry(item.id)
+                    hasTransientFailure = true
                 }
             }
-            syncedCount
+            Pair(syncedCount, !hasTransientFailure)
         } catch (t: Throwable) {
             android.util.Log.e("SyncManager", "Error flushing sync queue", t)
-            0
+            Pair(0, false)
         }
     }
 

@@ -67,12 +67,27 @@ class AuthInterceptor(private val sessionManager: SessionManager) : Interceptor 
 }
 
 class DynamicBaseUrlInterceptor(private val sessionManager: SessionManager) : Interceptor {
+    companion object {
+        fun isTrustedUrl(httpUrl: okhttp3.HttpUrl, isDebug: Boolean): Boolean {
+            if (isDebug) return true
+            if (!httpUrl.isHttps) return false
+            val host = httpUrl.host.lowercase()
+            val defaultHost = uz.farzandim.teacher.BuildConfig.BASE_URL.toHttpUrlOrNull()?.host?.lowercase()
+            return host == "api.akademx.uz" ||
+                    host == "akademx.uz" ||
+                    host.endsWith(".akademx.uz") ||
+                    host == "farzandim.uz" ||
+                    host.endsWith(".farzandim.uz") ||
+                    (defaultHost != null && host == defaultHost)
+        }
+    }
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
         val currentBaseUrl = runBlocking { sessionManager.getBaseUrl() }
         val newHttpUrl = currentBaseUrl.toHttpUrlOrNull()
 
-        val request = if (newHttpUrl != null) {
+        val request = if (newHttpUrl != null && isTrustedUrl(newHttpUrl, uz.farzandim.teacher.BuildConfig.DEBUG)) {
             val newUrl = original.url.newBuilder()
                 .scheme(newHttpUrl.scheme)
                 .host(newHttpUrl.host)
@@ -89,6 +104,10 @@ class DynamicBaseUrlInterceptor(private val sessionManager: SessionManager) : In
 class NetworkDebugInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        if (!uz.farzandim.teacher.BuildConfig.DEBUG) {
+            return chain.proceed(request)
+        }
+
         val url = request.url.toString()
         val method = request.method
         val startTime = System.currentTimeMillis()

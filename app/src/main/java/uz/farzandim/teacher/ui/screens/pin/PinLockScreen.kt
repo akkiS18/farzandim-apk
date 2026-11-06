@@ -75,6 +75,12 @@ fun PinLockScreen(
     }
 
     fun handleDigit(digit: String) {
+        if (uz.farzandim.teacher.util.SecurityHelper.isLockedOut()) {
+            val secs = uz.farzandim.teacher.util.SecurityHelper.getRemainingLockoutSeconds()
+            isError = true
+            errorMessage = "Juda ko'p urinish. $secs soniyadan so'ng urinib ko'ring"
+            return
+        }
         if (enteredPin.length >= 4) return
 
         val newPin = enteredPin + digit
@@ -86,10 +92,17 @@ fun PinLockScreen(
             coroutineScope.launch {
                 val isValid = sessionManager.verifyPin(newPin)
                 if (isValid) {
+                    uz.farzandim.teacher.util.SecurityHelper.resetAttempts()
                     onUnlockSuccess()
                 } else {
+                    val lockedNow = uz.farzandim.teacher.util.SecurityHelper.recordFailedAttempt()
                     isError = true
-                    errorMessage = "PIN kod noto'g'ri. Qaytadan urinib ko'ring!"
+                    errorMessage = if (lockedNow) {
+                        val secs = uz.farzandim.teacher.util.SecurityHelper.getRemainingLockoutSeconds()
+                        "5 marta xato! $secs soniyaga bloklandi"
+                    } else {
+                        "PIN kod noto'g'ri. Qaytadan urinib ko'ring!"
+                    }
                     delay(300)
                     enteredPin = ""
                 }

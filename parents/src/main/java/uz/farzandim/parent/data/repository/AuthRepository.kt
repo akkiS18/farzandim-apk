@@ -127,6 +127,7 @@ class AuthRepository(
         sessionManager.saveSubdomain(sub)
     }
     suspend fun logout() = withContext(Dispatchers.IO) {
+        uz.farzandim.parent.util.AppLogger.clear()
         try {
             parentDatabase.clearAllTables()
         } catch (e: Exception) {

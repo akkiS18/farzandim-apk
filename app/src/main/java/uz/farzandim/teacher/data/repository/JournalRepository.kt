@@ -240,7 +240,6 @@ class JournalRepository(
                 studentDao.insertStudents(entities)
                 // Clean any outdated grades that had invalid/old user_id keys
                 gradeDao.cleanOrphanGrades()
-                gradeDao.purgeZombieGrades()
                 Result.success(entities)
             } else {
                 Result.success(studentDao.getStudentsForClass(classId))
@@ -253,7 +252,6 @@ class JournalRepository(
     suspend fun cleanupStaleGrades() {
         try {
             gradeDao.cleanOrphanGrades()
-            gradeDao.purgeZombieGrades()
         } catch (_: Exception) {}
     }
 
@@ -318,7 +316,10 @@ class JournalRepository(
                     val key = "${g.studentId}_${lessonNum}_${cleanDate}_${resolvedGradeType}"
                     val existing = existingMap[key]
 
-                    if (existing != null && (existing.syncStatus == "PENDING_UPSERT" || existing.syncStatus == "CONFLICT")) {
+                    if (existing != null && (existing.syncStatus == "PENDING_DELETE" || existing.syncStatus == "REJECTED")) {
+                        // Preserve pending offline tombstone or rejected draft until resolved
+                        existing
+                    } else if (existing != null && (existing.syncStatus == "PENDING_UPSERT" || existing.syncStatus == "CONFLICT")) {
                         if (existing.value != g.value) {
                             // CONFLICT: Teacher set a grade offline, but server (class leader) set a different grade!
                             AppLogger.w("JournalRepo", "Conflict detected for student ${g.studentId}: local='${existing.value}' vs server='${g.value}'")
@@ -329,10 +330,11 @@ class JournalRepository(
                                 updatedAt = System.currentTimeMillis()
                             )
                         } else {
-                            // Both have the same value -> safely mark synced
+                            // Both have the same value -> safely mark synced if status also matches
+                            val needsApproveSync = existing.status == "approved" && g.status != "approved"
                             existing.copy(
                                 serverId = g.id,
-                                syncStatus = "SYNCED",
+                                syncStatus = if (needsApproveSync) "PENDING_UPSERT" else "SYNCED",
                                 conflictRemoteValue = null,
                                 conflictRemoteId = null,
                                 updatedAt = System.currentTimeMillis()
@@ -389,7 +391,7 @@ class JournalRepository(
         val existing = gradeDao.getGradeForStudent(studentId, subjectId, lessonNumber, gradeDate, resolvedGradeType)
 
         // If already locked / approved, it cannot be edited!
-        if (existing != null && existing.status == "approved") {
+        if (existing != null && existing.status == "approved" && existing.syncStatus != "PENDING_DELETE") {
             return null
         }
 
@@ -397,14 +399,23 @@ class JournalRepository(
         if (value.isBlank()) {
             if (existing != null) {
                 val serverId = existing.serverId
-                gradeDao.deleteGradeByLocalId(existing.localId)
                 if (serverId != null) {
+                    // Mark as PENDING_DELETE tombstone so offline deletions are not lost
+                    gradeDao.markGradeAsPendingDelete(existing.localId)
                     try {
-                        apiService.deleteGrade(serverId)
-                        AppLogger.i("GradeSync", "Deleted grade on backend: $serverId")
+                        val delRes = apiService.deleteGrade(serverId)
+                        if (delRes.isSuccessful || delRes.code() == 404) {
+                            gradeDao.deleteGradeByLocalId(existing.localId)
+                            AppLogger.i("GradeSync", "Deleted grade on backend: $serverId")
+                        } else {
+                            AppLogger.w("GradeSync", "Delete grade returned ${delRes.code()}, keeping PENDING_DELETE for worker")
+                        }
                     } catch (e: Exception) {
-                        AppLogger.e("GradeSync", "Failed to delete grade $serverId: ${e.message}")
+                        AppLogger.e("GradeSync", "Offline delete queued for grade $serverId: ${e.message}")
                     }
+                } else {
+                    // Never synced to server, safe to delete locally immediately
+                    gradeDao.deleteGradeByLocalId(existing.localId)
                 }
             }
             return null
@@ -450,13 +461,13 @@ class JournalRepository(
                 val res = apiService.updateGrade(initialServerId, req)
                 if (res.isSuccessful && res.body() != null) {
                     gradeDao.upsertGrade(entity.copy(syncStatus = "SYNCED"))
-                    AppLogger.i("GradeSync", "Updated grade draft on backend: ID $initialServerId (value: $value)")
+                    AppLogger.i("GradeSync", "Updated grade draft on backend: ID $initialServerId")
                 } else if (res.code() == 403 || res.code() == 400) {
-                    AppLogger.w("GradeSync", "Backend update rejected ${res.code()}: ${res.errorBody()?.string()}. Purging invalid local draft.")
-                    gradeDao.deleteGradeByLocalId(localId)
+                    AppLogger.w("GradeSync", "Backend update rejected ${res.code()}. Marking local draft as REJECTED.")
+                    gradeDao.markGradeAsRejected(localId)
                     return null
                 } else {
-                    AppLogger.w("GradeSync", "Backend update returned ${res.code()}: ${res.errorBody()?.string()}")
+                    AppLogger.w("GradeSync", "Backend update returned ${res.code()}")
                 }
             } else {
                 val res = apiService.createGrade(req)
@@ -464,13 +475,13 @@ class JournalRepository(
                     val created = res.body()!!
                     gradeDao.updateServerGradeId(localId, created.id)
                     commentDao.updateServerGradeIdForComments(localId, created.id)
-                    AppLogger.i("GradeSync", "Created grade draft on backend: ID ${created.id} (value: $value)")
+                    AppLogger.i("GradeSync", "Created grade draft on backend: ID ${created.id}")
                 } else if (res.code() == 403 || res.code() == 400) {
-                    AppLogger.w("GradeSync", "Backend create rejected ${res.code()}: ${res.errorBody()?.string()}. Purging invalid local draft.")
-                    gradeDao.deleteGradeByLocalId(localId)
+                    AppLogger.w("GradeSync", "Backend create rejected ${res.code()}. Marking local draft as REJECTED.")
+                    gradeDao.markGradeAsRejected(localId)
                     return null
                 } else {
-                    AppLogger.w("GradeSync", "Backend create returned ${res.code()}: ${res.errorBody()?.string()}")
+                    AppLogger.w("GradeSync", "Backend create returned ${res.code()}")
                 }
             }
         } catch (e: Exception) {
@@ -484,21 +495,28 @@ class JournalRepository(
     suspend fun finalizeAndApproveGrades(
         subjectId: Int,
         lessonNumber: Int,
-        gradeDate: String
+        gradeDate: String,
+        classId: Int? = null
     ): Result<Int> {
-        val allLessonGrades = gradeDao.getGradesForLesson(subjectId, lessonNumber, gradeDate)
-        val unapprovedGrades = allLessonGrades.filter { it.status != "approved" }
+        val allLessonGrades = gradeDao.getGradesForLesson(subjectId, lessonNumber, gradeDate, classId)
+        val unapprovedGrades = allLessonGrades.filter {
+            it.status != "approved" && it.syncStatus != "PENDING_DELETE" && it.syncStatus != "CONFLICT" && it.syncStatus != "REJECTED"
+        }
 
         if (unapprovedGrades.isEmpty()) {
             return Result.success(0)
         }
 
-        // Lock locally immediately so UI shows locked state instantly
+        val hadPendingValueEdits = unapprovedGrades.filter { it.serverId != null && it.syncStatus == "PENDING_UPSERT" }
+            .map { it.localId }.toSet()
+
+        // Lock locally immediately as status='approved' and syncStatus='PENDING_UPSERT' so UI locks and worker tracks them
         val localIds = unapprovedGrades.map { it.localId }
         gradeDao.markGradesAsApproved(localIds)
 
         try {
-            val serverIdsToApprove = mutableListOf<Int>()
+            // Map of localId -> confirmed serverId ready to be approved on server
+            val confirmedServerIdsByLocalId = mutableMapOf<String, Int>()
 
             // 1. Any grades that haven't been created on the server yet (e.g. offline when entered)
             val notOnServer = unapprovedGrades.filter { it.serverId == null }
@@ -518,16 +536,27 @@ class JournalRepository(
                 val batchRes = apiService.batchCreateGrades(BatchCreateGradesRequest(requests))
                 if (batchRes.isSuccessful && batchRes.body() != null) {
                     val createdList = batchRes.body()!!
+                    val matchedLocalIds = mutableSetOf<String>()
+
                     createdList.forEach { cg ->
-                        serverIdsToApprove.add(cg.id)
+                        val cgDate = cg.gradeDate.substringBefore('T').take(10)
+                        val cgType = if (cg.gradeType.equals("DAILY", ignoreCase = true) || cg.gradeType.isNullOrBlank()) "MASTERY" else cg.gradeType
+                        val cgCat = cg.gradeCategory ?: "DAILY"
+                        val cgLesson = if (cg.lessonNumber != null && cg.lessonNumber > 0) cg.lessonNumber else 1
+
                         val match = notOnServer.find {
-                            it.studentId == cg.studentId &&
+                            it.localId !in matchedLocalIds &&
+                                    it.studentId == cg.studentId &&
                                     it.subjectId == cg.subjectId &&
-                                    it.lessonNumber == (cg.lessonNumber ?: 1) &&
-                                    (it.gradeType == cg.gradeType || (it.gradeType == "MASTERY" && cg.gradeType == "DAILY") || (it.gradeType == "DAILY" && cg.gradeType == "MASTERY"))
+                                    it.lessonNumber == cgLesson &&
+                                    it.gradeDate.take(10) == cgDate &&
+                                    (it.gradeCategory.ifBlank { "DAILY" }) == cgCat &&
+                                    (it.gradeType == cgType || (it.gradeType == "MASTERY" && cgType == "DAILY") || (it.gradeType == "DAILY" && cgType == "MASTERY"))
                         }
                         if (match != null) {
-                            gradeDao.updateServerGradeId(match.localId, cg.id)
+                            matchedLocalIds.add(match.localId)
+                            confirmedServerIdsByLocalId[match.localId] = cg.id
+                            gradeDao.updateServerIdOnly(match.localId, cg.id)
                             commentDao.updateServerGradeIdForComments(match.localId, cg.id)
                         }
                     }
@@ -548,43 +577,76 @@ class JournalRepository(
                             val singleRes = apiService.createGrade(singleReq)
                             if (singleRes.isSuccessful && singleRes.body() != null) {
                                 val sId = singleRes.body()!!.id
-                                serverIdsToApprove.add(sId)
-                                gradeDao.updateServerGradeId(g.localId, sId)
+                                confirmedServerIdsByLocalId[g.localId] = sId
+                                gradeDao.updateServerIdOnly(g.localId, sId)
                                 commentDao.updateServerGradeIdForComments(g.localId, sId)
                             } else if (singleRes.code() == 403 || singleRes.code() == 400) {
-                                AppLogger.w("GradeSync", "Purging invalid grade: localId=${g.localId}, studentId=${g.studentId}")
-                                gradeDao.deleteGradeByLocalId(g.localId)
+                                AppLogger.w("GradeSync", "Rejected grade: localId=${g.localId}, studentId=${g.studentId}")
+                                gradeDao.markGradeAsRejected(g.localId)
                             }
                         } catch (_: Exception) {}
                     }
+                } else {
+                    AppLogger.w("GradeSync", "Batch create returned ${batchRes.code()}, leaving grades as PENDING_UPSERT")
                 }
             }
 
-            // 2. Add grades that were already created on the server as drafts
-            unapprovedGrades.mapNotNull { it.serverId }.forEach {
-                serverIdsToApprove.add(it)
+            // 2. Process grades that already had a serverId
+            for (g in unapprovedGrades.filter { it.serverId != null }) {
+                val sId = g.serverId!!
+                if (g.localId in hadPendingValueEdits) {
+                    // Value was edited offline, push value update before approving
+                    val updateReq = CreateGradeRequest(
+                        studentId = g.studentId,
+                        subjectId = g.subjectId,
+                        value = g.value,
+                        gradeDate = g.gradeDate,
+                        gradingSystemId = g.gradingSystemId,
+                        gradeType = g.gradeType,
+                        gradeCategory = g.gradeCategory,
+                        lessonNumber = g.lessonNumber
+                    )
+                    try {
+                        val upRes = apiService.updateGrade(sId, updateReq)
+                        if (upRes.isSuccessful) {
+                            confirmedServerIdsByLocalId[g.localId] = sId
+                        } else if (upRes.code() == 403 || upRes.code() == 400) {
+                            gradeDao.markGradeAsRejected(g.localId)
+                        }
+                    } catch (_: Exception) {}
+                } else {
+                    confirmedServerIdsByLocalId[g.localId] = sId
+                }
             }
 
-            // 3. Approve and lock them all on the server
-            if (serverIdsToApprove.isNotEmpty()) {
+            // 3. Approve and lock confirmed grades on the server
+            var approvedSuccess = false
+            if (confirmedServerIdsByLocalId.isNotEmpty()) {
+                val serverIdsToApprove = confirmedServerIdsByLocalId.values.distinct()
                 val statusRes = apiService.changeGradeStatus(
-                    ChangeGradeStatusRequest(serverIdsToApprove.distinct(), "approved")
+                    ChangeGradeStatusRequest(serverIdsToApprove, "approved")
                 )
                 if (statusRes.isSuccessful) {
+                    approvedSuccess = true
+                    // ONLY mark as SYNCED the records that were confirmed AND approved on the server!
+                    gradeDao.markGradesAsSynced(confirmedServerIdsByLocalId.keys.toList())
                     AppLogger.i("GradeSync", "Successfully approved ${serverIdsToApprove.size} grades on server")
                 } else {
                     AppLogger.w("GradeSync", "Approve status change failed: ${statusRes.code()}")
                 }
             }
 
-            gradeDao.markGradesAsSynced(localIds)
             syncPendingComments()
 
-            return Result.success(unapprovedGrades.size)
+            return if (approvedSuccess && confirmedServerIdsByLocalId.size == unapprovedGrades.size) {
+                Result.success(unapprovedGrades.size)
+            } else {
+                Result.failure(Exception("Server bilan aloqa xatosi: baholar qurilmada tasdiqlandi va tarmoq tiklanganda avtomatik sinxronlanadi"))
+            }
         } catch (e: Exception) {
             AppLogger.e("GradeSync", "finalizeAndApproveGrades error: ${e.message}")
-            // Even if network fails, they remain approved locally and will be synced
-            return Result.success(unapprovedGrades.size)
+            // Keep grades as status='approved' and syncStatus='PENDING_UPSERT' so worker will sync them
+            return Result.failure(Exception("Oflayn saqlandi: internet ulanganda serverga yuboriladi"))
         }
     }
 

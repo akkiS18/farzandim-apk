@@ -173,13 +173,18 @@ data class TransactionDto(
     @SerializedName("created_at") val createdAt: String? = null
 )
 
-data class AiReportDto(
-    @SerializedName("id") val id: Int,
+data class AiReportResponse(
+    @SerializedName("report") val report: AiWeeklyReportDto? = null
+)
+
+data class AiWeeklyReportDto(
+    @SerializedName("id") val id: String? = null,
     @SerializedName("student_id") val studentId: Int,
-    @SerializedName("summary") val summary: String? = null,
-    @SerializedName("strengths") val strengths: List<String>? = null,
-    @SerializedName("areas_to_improve") val areasToImprove: List<String>? = null,
-    @SerializedName("recommendations") val recommendations: List<String>? = null,
-    @SerializedName("week_start") val weekStart: String? = null,
+    @SerializedName("year") val year: Int? = null,
+    @SerializedName("week_number") val weekNumber: Int? = null,
+    @SerializedName("start_date") val startDate: String? = null,
+    @SerializedName("end_date") val endDate: String? = null,
+    @SerializedName("report_text") val reportText: String? = null,
+    @SerializedName("summary_json") val summaryJson: Map<String, Any>? = null,
     @SerializedName("created_at") val createdAt: String? = null
 )

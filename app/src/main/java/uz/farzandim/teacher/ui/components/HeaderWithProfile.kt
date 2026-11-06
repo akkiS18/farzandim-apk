@@ -46,6 +46,7 @@ fun HeaderWithProfile(
     var lastClickTime by remember { mutableLongStateOf(0L) }
 
     fun onTitleClick() {
+        if (!uz.farzandim.teacher.BuildConfig.DEBUG) return
         val now = System.currentTimeMillis()
         if (now - lastClickTime < 1500) {
             clickCount++

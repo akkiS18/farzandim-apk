@@ -52,15 +52,25 @@ fun PinScreen(
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    fun findFragmentActivity(ctx: android.content.Context): FragmentActivity? {
+        var current = ctx
+        while (current is android.content.ContextWrapper) {
+            if (current is FragmentActivity) return current
+            current = current.baseContext
+        }
+        return null
+    }
+
     fun showBiometricPrompt() {
-        val activity = context as? FragmentActivity ?: return
-        val executor = ContextCompat.getMainExecutor(context)
+        val activity = findFragmentActivity(context) ?: return
+        val executor = ContextCompat.getMainExecutor(activity)
         val prompt = BiometricPrompt(
             activity,
             executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
+                    uz.farzandim.parent.util.SecurityHelper.resetAttempts()
                     onSuccess()
                 }
             }
@@ -85,6 +95,13 @@ fun PinScreen(
     }
 
     fun handleDigit(digit: Int) {
+        if (currentMode == PinScreenMode.ENTER && uz.farzandim.parent.util.SecurityHelper.isLockedOut()) {
+            val secs = uz.farzandim.parent.util.SecurityHelper.getRemainingLockoutSeconds()
+            isError = true
+            errorMessage = "Juda ko'p urinish. $secs soniyadan so'ng urinib ko'ring"
+            return
+        }
+
         if (enteredPin.length < 4) {
             enteredPin += digit
             isError = false
@@ -96,10 +113,17 @@ fun PinScreen(
                         scope.launch {
                             val isValid = viewModel.verifyPin(enteredPin)
                             if (isValid) {
+                                uz.farzandim.parent.util.SecurityHelper.resetAttempts()
                                 onSuccess()
                             } else {
+                                val lockedNow = uz.farzandim.parent.util.SecurityHelper.recordFailedAttempt()
                                 isError = true
-                                errorMessage = context.getString(R.string.pin_wrong)
+                                errorMessage = if (lockedNow) {
+                                    val secs = uz.farzandim.parent.util.SecurityHelper.getRemainingLockoutSeconds()
+                                    "5 marta xato! $secs soniyaga bloklandi"
+                                } else {
+                                    context.getString(R.string.pin_wrong)
+                                }
                                 delay(600)
                                 enteredPin = ""
                             }

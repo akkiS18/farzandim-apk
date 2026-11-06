@@ -415,13 +415,14 @@ class JournalViewModel(
 
     // Step 2: Finalize & Approve ("Saqlash" button)
     fun finalizeAndApprove() {
+        val classId = _selectedClassId.value
         val subjectId = _selectedSubjectId.value ?: return
         val lessonNumber = _selectedLessonNumber.value
         val date = _selectedDate.value
 
         viewModelScope.launch {
             _isSaving.value = true
-            val result = journalRepository.finalizeAndApproveGrades(subjectId, lessonNumber, date)
+            val result = journalRepository.finalizeAndApproveGrades(subjectId, lessonNumber, date, classId)
             _isSaving.value = false
 
             result.fold(
@@ -434,7 +435,9 @@ class JournalViewModel(
                     syncManager.updateSyncStatus()
                 },
                 onFailure = { error ->
-                    _toastMessage.emit("Xatolik: ${error.message}")
+                    _toastMessage.emit(error.message ?: "Saqlashda xatolik")
+                    syncManager.triggerImmediateSync()
+                    syncManager.updateSyncStatus()
                 }
             )
         }

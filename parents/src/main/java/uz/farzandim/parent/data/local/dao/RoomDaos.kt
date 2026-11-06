@@ -15,6 +15,9 @@ interface ChildDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChildren(children: List<ChildEntity>)
 
+    @Query("DELETE FROM children WHERE id NOT IN (:activeIds)")
+    suspend fun deleteRemovedChildren(activeIds: List<Int>)
+
     @Query("DELETE FROM children")
     suspend fun clearChildren()
 }
@@ -30,6 +33,9 @@ interface ParentGradeDao {
     @Query("UPDATE parent_grades SET approvedByParent = 1 WHERE id = :gradeId")
     suspend fun markApprovedLocally(gradeId: Int)
 
+    @Query("UPDATE parent_grades SET approvedByParent = 0 WHERE id = :gradeId")
+    suspend fun markUnapprovedLocally(gradeId: Int)
+
     @Query("UPDATE parent_grades SET approvedByParent = 1 WHERE id IN (:gradeIds)")
     suspend fun markAllApprovedLocally(gradeIds: List<Int>)
 
@@ -38,6 +44,9 @@ interface ParentGradeDao {
 
     @Query("DELETE FROM parent_grades WHERE studentId = :studentId")
     suspend fun clearGradesForStudent(studentId: Int)
+
+    @Query("DELETE FROM parent_grades WHERE studentId NOT IN (:activeIds)")
+    suspend fun deleteGradesForRemovedChildren(activeIds: List<Int>)
 }
 
 @Dao
@@ -104,6 +113,9 @@ interface ClubDao {
 
     @Query("DELETE FROM clubs WHERE studentId = :studentId")
     suspend fun clearClubsForStudent(studentId: Int)
+
+    @Query("DELETE FROM clubs WHERE studentId NOT IN (:activeIds)")
+    suspend fun deleteClubsForRemovedChildren(activeIds: List<Int>)
 }
 
 @Dao

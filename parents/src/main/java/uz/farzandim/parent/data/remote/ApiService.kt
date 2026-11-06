@@ -131,7 +131,9 @@ interface ApiService {
 
     // 19. AI Reports
     @GET("api/schools/parent/ai-reports/latest")
-    suspend fun getLatestAiReport(): Response<AiReportDto>
+    suspend fun getLatestAiReport(
+        @Query("student_id") studentId: Int
+    ): Response<AiReportResponse>
 
     // 20. Update Profiles
     @PUT("api/schools/students/{id}")

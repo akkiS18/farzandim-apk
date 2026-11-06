@@ -128,6 +128,12 @@
     <string name="logout_confirm_title">Вы уверены?</string>
     <string name="logout_confirm_msg">Вы действительно хотите выйти?</string>
 
+    <!-- About & Legal -->
+    <string name="about_app_section">О приложении и правила</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="terms_of_service">Условия использования</string>
+    <string name="app_version">Farzandim Родитель • Версия 1.0</string>
+
     <!-- Error & Common -->
     <string name="error_generic">Произошла ошибка</string>
     <string name="error_network">Ошибка подключения к серверу</string>

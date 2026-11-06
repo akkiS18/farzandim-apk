@@ -121,16 +121,16 @@ interface ScheduleDao {
 
 @Dao
 interface GradeDao {
-    @Query("SELECT * FROM grades WHERE subjectId = :subjectId AND lessonNumber = :lessonNumber AND gradeDate = :gradeDate")
+    @Query("SELECT * FROM grades WHERE subjectId = :subjectId AND lessonNumber = :lessonNumber AND gradeDate = :gradeDate AND syncStatus != 'PENDING_DELETE'")
     fun getGradesForLessonFlow(subjectId: Int, lessonNumber: Int, gradeDate: String): Flow<List<GradeEntity>>
 
-    @Query("SELECT * FROM grades WHERE subjectId = :subjectId AND gradeDate = :gradeDate")
+    @Query("SELECT * FROM grades WHERE subjectId = :subjectId AND gradeDate = :gradeDate AND syncStatus != 'PENDING_DELETE'")
     fun getGradesForSubjectAndDateFlow(subjectId: Int, gradeDate: String): Flow<List<GradeEntity>>
 
     @Query("SELECT * FROM grades WHERE studentId = :studentId AND subjectId = :subjectId AND lessonNumber = :lessonNumber AND gradeDate = :gradeDate AND (gradeType = :gradeType OR (:gradeType = 'MASTERY' AND gradeType = 'DAILY') OR (:gradeType = 'DAILY' AND gradeType = 'MASTERY')) LIMIT 1")
     suspend fun getGradeForStudent(studentId: Int, subjectId: Int, lessonNumber: Int, gradeDate: String, gradeType: String): GradeEntity?
 
-    @Query("SELECT * FROM grades WHERE studentId = :studentId AND subjectId = :subjectId AND lessonNumber = :lessonNumber AND gradeDate = :gradeDate")
+    @Query("SELECT * FROM grades WHERE studentId = :studentId AND subjectId = :subjectId AND lessonNumber = :lessonNumber AND gradeDate = :gradeDate AND syncStatus != 'PENDING_DELETE'")
     suspend fun getGradesForStudentLesson(studentId: Int, subjectId: Int, lessonNumber: Int, gradeDate: String): List<GradeEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -139,8 +139,14 @@ interface GradeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertGrades(grades: List<GradeEntity>)
 
-    @Query("SELECT * FROM grades WHERE syncStatus != 'SYNCED'")
+    @Query("SELECT * FROM grades WHERE syncStatus IN ('PENDING_UPSERT', 'PENDING_DELETE') ORDER BY updatedAt ASC")
     suspend fun getPendingGrades(): List<GradeEntity>
+
+    @Query("SELECT * FROM grades WHERE syncStatus = 'PENDING_UPSERT' ORDER BY updatedAt ASC")
+    suspend fun getPendingUpsertGrades(): List<GradeEntity>
+
+    @Query("SELECT * FROM grades WHERE syncStatus = 'PENDING_DELETE' ORDER BY updatedAt ASC")
+    suspend fun getPendingDeleteGrades(): List<GradeEntity>
 
     @Query("SELECT * FROM grades WHERE syncStatus = 'CONFLICT'")
     fun getConflictGradesFlow(): Flow<List<GradeEntity>>
@@ -154,14 +160,30 @@ interface GradeDao {
     @Query("SELECT * FROM grades WHERE localId IN (:localIds)")
     suspend fun getGradesByLocalIds(localIds: List<String>): List<GradeEntity>
 
-    @Query("SELECT * FROM grades WHERE subjectId = :subjectId AND lessonNumber = :lessonNumber AND gradeDate = :gradeDate")
-    suspend fun getGradesForLesson(subjectId: Int, lessonNumber: Int, gradeDate: String): List<GradeEntity>
+    @Query("""
+        SELECT * FROM grades 
+        WHERE subjectId = :subjectId 
+          AND lessonNumber = :lessonNumber 
+          AND gradeDate = :gradeDate 
+          AND syncStatus != 'PENDING_DELETE'
+          AND (:classId IS NULL OR studentId IN (SELECT id FROM students WHERE classId = :classId))
+    """)
+    suspend fun getGradesForLesson(subjectId: Int, lessonNumber: Int, gradeDate: String, classId: Int? = null): List<GradeEntity>
 
     @Query("DELETE FROM grades WHERE localId = :localId")
     suspend fun deleteGradeByLocalId(localId: String)
 
-    @Query("UPDATE grades SET status = 'approved', updatedAt = :timestamp WHERE localId IN (:localIds)")
+    @Query("UPDATE grades SET syncStatus = 'PENDING_DELETE', value = '', numericValue = NULL, updatedAt = :timestamp WHERE localId = :localId")
+    suspend fun markGradeAsPendingDelete(localId: String, timestamp: Long = System.currentTimeMillis())
+
+    @Query("UPDATE grades SET syncStatus = 'REJECTED', status = 'draft', updatedAt = :timestamp WHERE localId = :localId")
+    suspend fun markGradeAsRejected(localId: String, timestamp: Long = System.currentTimeMillis())
+
+    @Query("UPDATE grades SET status = 'approved', syncStatus = 'PENDING_UPSERT', updatedAt = :timestamp WHERE localId IN (:localIds)")
     suspend fun markGradesAsApproved(localIds: List<String>, timestamp: Long = System.currentTimeMillis())
+
+    @Query("UPDATE grades SET serverId = :serverId WHERE localId = :localId")
+    suspend fun updateServerIdOnly(localId: String, serverId: Int)
 
     @Query("UPDATE grades SET serverId = :serverId, syncStatus = 'SYNCED' WHERE localId = :localId")
     suspend fun updateServerGradeId(localId: String, serverId: Int)
@@ -171,9 +193,6 @@ interface GradeDao {
 
     @Query("DELETE FROM grades WHERE studentId NOT IN (SELECT id FROM students)")
     suspend fun cleanOrphanGrades()
-
-    @Query("DELETE FROM grades WHERE studentId = 69")
-    suspend fun purgeZombieGrades()
 
     @Query("""
         SELECT * FROM grades 
