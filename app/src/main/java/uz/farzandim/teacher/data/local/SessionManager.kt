@@ -6,6 +6,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import uz.farzandim.teacher.util.SecurityHelper
 
 private val Context.dataStore by preferencesDataStore(name = "farzandim_teacher_prefs")
@@ -32,9 +33,23 @@ class SessionManager(private val context: Context) {
         const val DEFAULT_SUBDOMAIN = "test_school"
         val DEFAULT_BASE_URL: String = uz.farzandim.teacher.BuildConfig.BASE_URL
 
+        // Origin is only used by the backend to resolve the tenant from the first host label,
+        // so the base domain is cosmetic; akademx.uz keeps working on the backend side.
         fun formatOrigin(subdomain: String): String {
             val clean = subdomain.trim().lowercase()
-            return "https://$clean.akademx.uz"
+            return "https://$clean.farzandim-edu.uz"
+        }
+
+        /**
+         * Custom base URLs saved by older builds that must not override the default any more:
+         * the old per-school ":6560" URLs and the old default API host (api.akademx.uz).
+         * They are ignored (not deleted), so reads fall back to DEFAULT_BASE_URL.
+         */
+        fun isLegacyBaseUrl(url: String): Boolean {
+            val lower = url.trim().lowercase()
+            if (lower.contains(".akademx.uz:6560") || lower.contains(".farzandim-edu.uz:6560")) return true
+            val host = lower.toHttpUrlOrNull()?.host ?: return false
+            return host == "akademx.uz" || host == "api.akademx.uz"
         }
 
         fun formatBaseUrl(subdomain: String = ""): String {
@@ -75,7 +90,7 @@ class SessionManager(private val context: Context) {
 
     val baseUrlFlow: Flow<String> = context.dataStore.data.map { prefs ->
         val customUrl = prefs[KEY_BASE_URL]
-        if (!customUrl.isNullOrBlank() && !customUrl.contains(".akademx.uz:6560")) {
+        if (!customUrl.isNullOrBlank() && !isLegacyBaseUrl(customUrl)) {
             customUrl
         } else {
             DEFAULT_BASE_URL
@@ -228,7 +243,7 @@ class SessionManager(private val context: Context) {
     suspend fun getBaseUrl(): String {
         val prefs = context.dataStore.data.first()
         val customUrl = prefs[KEY_BASE_URL]
-        if (!customUrl.isNullOrBlank() && !customUrl.contains(".akademx.uz:6560")) {
+        if (!customUrl.isNullOrBlank() && !isLegacyBaseUrl(customUrl)) {
             return customUrl
         }
         return DEFAULT_BASE_URL

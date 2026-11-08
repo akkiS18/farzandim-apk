@@ -332,7 +332,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .clickable {
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim.uz/privacy"))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim-edu.uz/privacy"))
                                 context.startActivity(intent)
                             } catch (_: Exception) {}
                         }
@@ -377,7 +377,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .clickable {
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim.uz/terms"))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim-edu.uz/terms"))
                                 context.startActivity(intent)
                             } catch (_: Exception) {}
                         }

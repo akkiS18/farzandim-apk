@@ -273,7 +273,7 @@ fun SchoolPickerDialog(
                                                     )
                                                     if (!school.subdomain.isNullOrBlank()) {
                                                         Text(
-                                                            text = "${school.subdomain}.akademx.uz",
+                                                            text = "${school.subdomain}.farzandim-edu.uz",
                                                             fontSize = 11.sp,
                                                             color = TextMuted
                                                         )

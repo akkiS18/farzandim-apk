@@ -344,7 +344,7 @@ fun HeaderWithProfile(
 
     if (showDevLogDialog) {
         DevLogDialog(
-            currentBaseUrl = currentBaseUrl.ifEmpty { "https://api.akademx.uz" },
+            currentBaseUrl = currentBaseUrl.ifEmpty { "https://api.farzandim-edu.uz" },
             onDismiss = { showDevLogDialog = false }
         )
     }

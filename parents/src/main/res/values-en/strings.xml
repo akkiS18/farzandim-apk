@@ -13,7 +13,7 @@
     <string name="login_loading">Verifying credentials...</string>
     <string name="school_settings">School Settings</string>
     <string name="school_subdomain">School Subdomain</string>
-    <string name="school_subdomain_hint">e.g. 21_maktab</string>
+    <string name="school_subdomain_hint">e.g. 21-maktab</string>
     <string name="save_btn">Save</string>
     <string name="cancel_btn">Cancel</string>
 

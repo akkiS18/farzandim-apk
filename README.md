@@ -30,7 +30,7 @@ f-app/
 1. `local.properties` faylini yarating va backend API manzilini ko'rsating:
    ```properties
    sdk.dir=/path/to/android/sdk
-   API_BASE_URL=https://api.akademx.uz
+   API_BASE_URL=https://api.farzandim-edu.uz
    ```
 
 2. **Debug build**:

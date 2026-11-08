@@ -13,7 +13,7 @@
     <string name="login_loading">Tekshirilmoqda...</string>
     <string name="school_settings">Maktab sozlamalari</string>
     <string name="school_subdomain">Maktab subdomeni</string>
-    <string name="school_subdomain_hint">masalan: 21_maktab</string>
+    <string name="school_subdomain_hint">masalan: 21-maktab</string>
     <string name="save_btn">Saqlash</string>
     <string name="cancel_btn">Bekor qilish</string>
 

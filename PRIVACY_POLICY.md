@@ -58,13 +58,13 @@ Ilova faqat voyaga yetmagan o'quvchilarning qonuniy vakillari (ota-onalar va vas
 ## 6. Ma'lumotlarni O'chirish Huquqi (Account & Data Deletion)
 Foydalanuvchi istalgan vaqtda o'z hisobini va shaxsiy ma'lumotlarini o'chirishni talab qilish huquqiga ega:
 - Ota-ona farzandining maktab ma'muriyatiga yozma yoki og'zaki murojaat qilish orqali tizimdagi hisobini faolsizlantirishi mumkin;
-- Yoki bizning qo'llab-quvvatlash xizmatimizga murojaat qilish orqali: **support@farzandim.uz**.
+- Yoki bizning qo'llab-quvvatlash xizmatimizga murojaat qilish orqali: **support@farzandim-edu.uz**.
 Murojaat 3 ish kuni ichida ko'rib chiqiladi va foydalanuvchining shaxsiy hisobi tizimdan o'chiriladi.
 
 ---
 
 ## 7. Biz Bilan Bog'lanish (Contact Information)
 Maxfiylik siyosati yuzasidan savollar yoki takliflar bo'yicha biz bilan bog'lanishingiz mumkin:
-- **Email**: support@farzandim.uz
-- **Veb-sayt**: https://farzandim.uz
+- **Email**: support@farzandim-edu.uz
+- **Veb-sayt**: https://farzandim-edu.uz
 - **Tashkilot**: "Farzandim" Ta'lim Axborot Tizimi

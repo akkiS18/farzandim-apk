@@ -293,7 +293,7 @@ fun LoginScreen(
                         modifier = Modifier.size(15.dp)
                     )
                     Text(
-                        text = currentSchoolName.ifBlank { "$currentSubdomain.akademx.uz" },
+                        text = currentSchoolName.ifBlank { "$currentSubdomain.farzandim-edu.uz" },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = OxfordSlate

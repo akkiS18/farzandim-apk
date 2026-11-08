@@ -70,7 +70,7 @@ fun AdminCodeDialog(
                     )
 
                     Text(
-                        text = ".akademx.uz",
+                        text = ".farzandim-edu.uz",
                         fontWeight = FontWeight.Bold,
                         color = OxfordSlate,
                         fontSize = 13.sp
@@ -103,7 +103,7 @@ fun AdminCodeDialog(
                             color = TextMuted
                         )
                         Text(
-                            text = "https://${subdomainInput.ifEmpty { "..." }}.akademx.uz",
+                            text = "https://${subdomainInput.ifEmpty { "..." }}.farzandim-edu.uz",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = OxfordSlate,

@@ -13,7 +13,7 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
-val apiBaseUrl: String = localProperties.getProperty("API_BASE_URL") ?: "https://api.akademx.uz"
+val apiBaseUrl: String = localProperties.getProperty("API_BASE_URL") ?: "https://api.farzandim-edu.uz"
 
 android {
     namespace = "uz.farzandim.parent"

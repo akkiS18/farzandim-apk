@@ -13,7 +13,7 @@
     <string name="login_loading">Проверка данных...</string>
     <string name="school_settings">Настройки школы</string>
     <string name="school_subdomain">Субдомен школы</string>
-    <string name="school_subdomain_hint">например: 21_maktab</string>
+    <string name="school_subdomain_hint">например: 21-maktab</string>
     <string name="save_btn">Сохранить</string>
     <string name="cancel_btn">Отмена</string>
 

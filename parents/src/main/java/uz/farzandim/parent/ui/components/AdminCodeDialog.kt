@@ -65,7 +65,7 @@ fun AdminCodeDialog(
                 )
 
                 Text(
-                    text = "https://${subdomainInput.ifEmpty { "maktab" }}.akademx.uz",
+                    text = "https://${subdomainInput.ifEmpty { "maktab" }}.farzandim-edu.uz",
                     fontSize = 11.sp,
                     color = SkyBlueDark,
                     fontWeight = FontWeight.Medium

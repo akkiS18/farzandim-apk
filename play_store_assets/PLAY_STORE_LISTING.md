@@ -83,7 +83,7 @@ Google Play Console'ning **App content -> Data safety** bo'limida quyidagicha to
 |-------|-------|------|
 | **Does your app collect or share any of the required user data types?** | **Yes** | Foydalanuvchi hisobi va o'quvchi baholari |
 | **Is all of the user data collected by your app encrypted in transit?** | **Yes** | Barcha so'rovlar HTTPS (TLS 1.3) orqali shifrlangan |
-| **Do you provide a way for users to request that their data be deleted?** | **Yes** | Maktab ma'muriyati yoki support@farzandim.uz orqali |
+| **Do you provide a way for users to request that their data be deleted?** | **Yes** | Maktab ma'muriyati yoki support@farzandim-edu.uz orqali |
 | **Is this app designed for children? (Target age)** | **18 and over (Parents only)** | Ilova ota-onalarga mo'ljallangan |
 | **Does your app use Advertising ID?** | **No** | Reklama SDK yoki AD ID umuman mavjud emas |
 

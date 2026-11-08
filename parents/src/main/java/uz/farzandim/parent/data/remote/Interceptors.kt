@@ -80,8 +80,9 @@ class DynamicBaseUrlInterceptor(private val sessionManager: SessionManager) : In
             return host == "api.akademx.uz" ||
                     host == "akademx.uz" ||
                     host.endsWith(".akademx.uz") ||
-                    host == "farzandim.uz" ||
-                    host.endsWith(".farzandim.uz") ||
+                    host == "api.farzandim-edu.uz" ||
+                    host == "farzandim-edu.uz" ||
+                    host.endsWith(".farzandim-edu.uz") ||
                     (defaultHost != null && host == defaultHost)
         }
     }
