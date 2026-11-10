@@ -17,12 +17,12 @@ val apiBaseUrl: String = localProperties.getProperty("API_BASE_URL") ?: "https:/
 
 android {
     namespace = "uz.farzandim.teacher"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "uz.farzandim.teacher"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 

@@ -17,13 +17,13 @@ val apiBaseUrl: String = localProperties.getProperty("API_BASE_URL") ?: "https:/
 
 android {
     namespace = "uz.farzandim.parent"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "uz.farzandim.parent"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 2
+        targetSdk = 36
+        versionCode = 3
         versionName = "1.0.1"
 
         buildConfigField("String", "BASE_URL", "\"$apiBaseUrl\"")
@@ -51,6 +51,8 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            // Ship native debug symbols in the bundle so Play can symbolicate native crashes/ANRs
+            ndk.debugSymbolLevel = "SYMBOL_TABLE"
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
