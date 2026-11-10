@@ -38,10 +38,16 @@ data class ParentGradeEntity(
     val createdAt: String?
 )
 
-@Entity(tableName = "parent_schedules")
+// Schedule is cached per week (like the web parents panel): the backend returns the single
+// active schedule period for the requested date, so rows are scoped by `weekStart` (Monday, YYYY-MM-DD).
+@Entity(
+    tableName = "parent_schedules",
+    primaryKeys = ["classId", "weekStart", "dayOfWeek", "lessonNumber"]
+)
 data class ParentScheduleEntity(
-    @PrimaryKey val id: Int,
+    val id: Int,
     val classId: Int,
+    val weekStart: String,
     val dayOfWeek: Int, // 1=Mon, 6=Sat
     val lessonNumber: Int,
     val subjectId: Int,

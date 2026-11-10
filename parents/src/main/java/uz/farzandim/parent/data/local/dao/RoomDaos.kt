@@ -51,14 +51,14 @@ interface ParentGradeDao {
 
 @Dao
 interface ParentScheduleDao {
-    @Query("SELECT * FROM parent_schedules WHERE classId = :classId ORDER BY dayOfWeek ASC, lessonNumber ASC")
-    fun getScheduleForClass(classId: Int): Flow<List<ParentScheduleEntity>>
+    @Query("SELECT * FROM parent_schedules WHERE classId = :classId AND weekStart = :weekStart ORDER BY dayOfWeek ASC, lessonNumber ASC")
+    fun getScheduleForWeek(classId: Int, weekStart: String): Flow<List<ParentScheduleEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchedules(schedules: List<ParentScheduleEntity>)
 
-    @Query("DELETE FROM parent_schedules WHERE classId = :classId")
-    suspend fun clearScheduleForClass(classId: Int)
+    @Query("DELETE FROM parent_schedules WHERE classId = :classId AND weekStart = :weekStart")
+    suspend fun clearScheduleForWeek(classId: Int, weekStart: String)
 }
 
 @Dao

@@ -31,7 +31,7 @@ val databaseModule = module {
             ParentDatabase::class.java,
             "farzandim_parent_v4.db"
         )
-            .addMigrations(ParentDatabase.MIGRATION_4_5)
+            .addMigrations(ParentDatabase.MIGRATION_4_5, ParentDatabase.MIGRATION_5_6)
             .build()
     }
 

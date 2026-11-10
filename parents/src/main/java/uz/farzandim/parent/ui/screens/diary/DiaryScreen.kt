@@ -56,6 +56,11 @@ fun DiaryScreen(
         weekDays.map { DiaryDateHelper.toIsoDateStr(it) }
     }
 
+    // Load the schedule for the visible week (and reload when the selected child's class changes)
+    LaunchedEffect(currentMondayCal, selectedChild?.classId) {
+        viewModel.setDiaryWeek(weekIsoDates.first())
+    }
+
     val weekGrades = remember(grades, weekIsoDates) {
         grades.filter { it.gradeDate in weekIsoDates }
     }

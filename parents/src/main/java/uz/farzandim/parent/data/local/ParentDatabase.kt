@@ -19,7 +19,7 @@ import uz.farzandim.parent.data.local.entity.*
         BookEntity::class,
         SyncQueueEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class ParentDatabase : RoomDatabase() {
@@ -34,6 +34,32 @@ abstract class ParentDatabase : RoomDatabase() {
     abstract fun syncQueueDao(): SyncQueueDao
 
     companion object {
+        // parent_schedules is only a cache of the backend; it now holds one schedule per week,
+        // so the old mixed-period rows are dropped and refetched.
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `parent_schedules`")
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `parent_schedules` (
+                        `id` INTEGER NOT NULL,
+                        `classId` INTEGER NOT NULL,
+                        `weekStart` TEXT NOT NULL,
+                        `dayOfWeek` INTEGER NOT NULL,
+                        `lessonNumber` INTEGER NOT NULL,
+                        `subjectId` INTEGER NOT NULL,
+                        `subjectName` TEXT NOT NULL,
+                        `teacherName` TEXT,
+                        `room` TEXT,
+                        `startTime` TEXT,
+                        `endTime` TEXT,
+                        `topicName` TEXT,
+                        `homework` TEXT,
+                        PRIMARY KEY(`classId`, `weekStart`, `dayOfWeek`, `lessonNumber`)
+                    )
+                """.trimIndent())
+            }
+        }
+
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("""

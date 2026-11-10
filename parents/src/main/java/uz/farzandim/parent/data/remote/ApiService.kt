@@ -48,7 +48,8 @@ interface ApiService {
     @GET("api/schools/classes/{id}/schedule")
     suspend fun getClassSchedule(
         @Path("id") classId: Int,
-        @Query("date") date: String? = null
+        @Query("date") date: String? = null,
+        @Query("ignore_holiday") ignoreHoliday: Boolean? = null
     ): Response<List<ClassScheduleItemDto>>
 
     // 9. Holidays

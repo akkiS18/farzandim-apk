@@ -49,6 +49,13 @@ object DiaryDateHelper {
         return cal
     }
 
+    /** Wednesday (YYYY-MM-DD) of the week that starts on [weekStartIso] (Monday) — same as the web panel. */
+    fun getRepresentativeDateOfWeek(weekStartIso: String): String {
+        val cal = parseIsoDate(weekStartIso)
+        cal.add(Calendar.DAY_OF_MONTH, 2)
+        return toIsoDateStr(cal)
+    }
+
     fun getWeekDays(mondayCal: Calendar): List<Calendar> {
         val days = mutableListOf<Calendar>()
         for (i in 0 until 6) { // Monday to Saturday

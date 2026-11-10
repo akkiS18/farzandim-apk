@@ -3,6 +3,8 @@ package uz.farzandim.parent.data.repository
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONObject
+import androidx.room.withTransaction
+import uz.farzandim.parent.util.DiaryDateHelper
 import uz.farzandim.parent.data.local.ParentDatabase
 import uz.farzandim.parent.data.local.entity.*
 import uz.farzandim.parent.data.model.*
@@ -173,18 +175,27 @@ class ParentRepository(
     }
 
     // 5. Schedule
-    fun getScheduleFlow(classId: Int): Flow<List<ParentScheduleEntity>> =
-        scheduleDao.getScheduleForClass(classId)
+    fun getScheduleFlow(classId: Int, weekStart: String): Flow<List<ParentScheduleEntity>> =
+        scheduleDao.getScheduleForWeek(classId, weekStart)
 
-    suspend fun fetchSchedule(classId: Int, dateStr: String? = null): Result<List<ParentScheduleEntity>> {
+    /**
+     * Mirrors the web parents panel: asks the backend for the schedule effective on the
+     * Wednesday of the given week (`weekStart` = Monday, YYYY-MM-DD). The backend then returns
+     * a single schedule period (plus topics/homework and exceptions) instead of every period.
+     */
+    suspend fun fetchSchedule(classId: Int, weekStart: String): Result<List<ParentScheduleEntity>> {
         return try {
-            val response = apiService.getClassSchedule(classId, dateStr)
+            val representativeDate = DiaryDateHelper.getRepresentativeDateOfWeek(weekStart)
+            val response = apiService.getClassSchedule(classId, representativeDate, ignoreHoliday = true)
             if (response.isSuccessful && response.body() != null) {
                 val dtoList = response.body()!!
-                val entities = dtoList.map { dto ->
+                val entities = dtoList
+                    .distinctBy { it.dayOfWeek to it.lessonNumber }
+                    .map { dto ->
                     ParentScheduleEntity(
                         id = dto.id,
-                        classId = dto.classId,
+                        classId = classId,
+                        weekStart = weekStart,
                         dayOfWeek = dto.dayOfWeek,
                         lessonNumber = dto.lessonNumber,
                         subjectId = dto.subjectId,
@@ -198,7 +209,11 @@ class ParentRepository(
                     )
                 }
                 try {
-                    scheduleDao.insertSchedules(entities)
+                    // Replace this week's cache atomically so stale/removed lessons never linger
+                    database.withTransaction {
+                        scheduleDao.clearScheduleForWeek(classId, weekStart)
+                        scheduleDao.insertSchedules(entities)
+                    }
                 } catch (dbEx: Exception) {
                     android.util.Log.w("ParentRepository", "Failed to cache schedules into Room: ${dbEx.message}")
                 }

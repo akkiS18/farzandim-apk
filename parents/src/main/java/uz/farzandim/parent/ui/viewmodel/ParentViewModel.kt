@@ -10,6 +10,7 @@ import uz.farzandim.parent.data.local.entity.*
 import uz.farzandim.parent.data.model.*
 import uz.farzandim.parent.data.repository.ParentRepository
 import uz.farzandim.parent.data.sync.SyncManager
+import uz.farzandim.parent.util.DiaryDateHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -92,14 +93,44 @@ class ParentViewModel(
         list.filter { it.gradeDate == today }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val schedule: StateFlow<List<ParentScheduleEntity>> = selectedChild
-        .filterNotNull()
-        .flatMapLatest { child ->
-            val cId = child.classId ?: 0
-            repository.getScheduleFlow(cId).catch { emit(emptyList()) }
+    // Monday (YYYY-MM-DD) of the week shown in the diary. The schedule is loaded per week,
+    // exactly like the web parents panel, so lessons of different schedule periods never mix.
+    private val _diaryWeekStart = MutableStateFlow(
+        DiaryDateHelper.toIsoDateStr(DiaryDateHelper.getMondayOfDate(Calendar.getInstance()))
+    )
+    private var fetchScheduleJob: kotlinx.coroutines.Job? = null
+
+    val schedule: StateFlow<List<ParentScheduleEntity>> = combine(
+        selectedChild.filterNotNull(),
+        _diaryWeekStart
+    ) { child, weekStart -> (child.classId ?: 0) to weekStart }
+        .distinctUntilChanged()
+        .flatMapLatest { (cId, weekStart) ->
+            repository.getScheduleFlow(cId, weekStart).catch { emit(emptyList()) }
         }
         .catch { emit(emptyList()) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Called by the diary when the visible week changes. [weekStartIso] is that week's Monday. */
+    fun setDiaryWeek(weekStartIso: String) {
+        _diaryWeekStart.value = weekStartIso
+        fetchScheduleForCurrentWeek()
+    }
+
+    private fun fetchScheduleForCurrentWeek(classId: Int? = selectedChild.value?.classId) {
+        if (classId == null) return
+        val weekStart = _diaryWeekStart.value
+        fetchScheduleJob?.cancel()
+        fetchScheduleJob = viewModelScope.launch {
+            try {
+                repository.fetchSchedule(classId, weekStart)
+            } catch (c: kotlinx.coroutines.CancellationException) {
+                throw c
+            } catch (t: Throwable) {
+                android.util.Log.e("ParentViewModel", "Error fetching schedule", t)
+            }
+        }
+    }
 
     val holidays: StateFlow<List<HolidayEntity>> = repository.holidaysFlow
         .catch { emit(emptyList()) }
@@ -160,9 +191,7 @@ class ParentViewModel(
                     }
                 }
                 val child = children.value.find { it.id == studentId }
-                if (child?.classId != null) {
-                    repository.fetchSchedule(child.classId)
-                }
+                fetchScheduleForCurrentWeek(child?.classId)
             } catch (c: kotlinx.coroutines.CancellationException) {
                 throw c
             } catch (t: Throwable) {
@@ -203,9 +232,7 @@ class ParentViewModel(
                             }
                         }
                         val activeChild = list.find { it.id == activeId }
-                        if (activeChild?.classId != null) {
-                            repository.fetchSchedule(activeChild.classId)
-                        }
+                        fetchScheduleForCurrentWeek(activeChild?.classId)
                         repository.getNextCharge(activeId).onSuccess {
                             if (_selectedChildId.value == activeId) {
                                 _nextCharge.value = it
