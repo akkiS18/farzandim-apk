@@ -3,6 +3,7 @@ package uz.farzandim.parent.ui.screens.settings
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -331,10 +332,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim-edu.uz/privacy"))
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
+                            openExternalUrl(context, "https://farzandim-edu.uz/privacy/")
                         }
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -376,10 +374,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://farzandim-edu.uz/terms"))
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
+                            openExternalUrl(context, "https://farzandim-edu.uz/terms/")
                         }
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -490,5 +485,22 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+}
+
+
+/**
+ * Opens [url] in the user's browser. Adds NEW_TASK when the context isn't an Activity and
+ * surfaces a toast instead of failing silently when no browser can handle the link.
+ */
+private fun openExternalUrl(context: android.content.Context, url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            addCategory(Intent.CATEGORY_BROWSABLE)
+            if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(context, url, Toast.LENGTH_LONG).show()
     }
 }
